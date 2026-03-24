@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ninja Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <span class="logo">ninja-terminal</span>
+        <button id="sidebar-toggle" class="sidebar-toggle" title="Toggle sidebar">&#9776;</button>
+      </div>
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">Activity</h3>
+        <div id="activity-feed"></div>
+      </div>
+      <hr>
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">Task Queue</h3>
+        <div id="task-queue"></div>
+        <button id="add-task-btn" class="add-task-btn">+ Add Task</button>
+      </div>
+    </aside>
+    <main>
+      <div id="grid"></div>
+    </main>
+  </div>
+  <footer id="status-bar">
+    <div id="status-counts"></div>
+    <div id="status-progress">Overall: 0%</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0.11.0/lib/addon-web-links.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
