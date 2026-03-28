@@ -22,3 +22,12 @@
 **Why:** Establishing the self-improving orchestrator system based on deep research of existing frameworks (SICA, Karpathy AutoResearch, Boris Cherny self-improving CLAUDE.md, Anthropic long-running harness patterns)
 **Evidence:** Research synthesis from 3 parallel research agents covering: self-improving AI agents, Claude Code advanced features, vibe coding ecosystem
 **Reversible:** Yes — all new files, no existing files modified yet
+
+### 2026-03-28 — ### Test Pattern
+**Status:** hypothesis
+**File:** orchestrator/playbooks.md
+**Change:** ### Test Pattern
+**Status:** hypothesis
+**Why:** Testing evolve endpoint
+**Evidence:** Manual test
+**Reversible:** yes

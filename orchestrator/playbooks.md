@@ -68,3 +68,4 @@ When looking for new tools or techniques:
 - **Don't use `PUT /env-vars` on Render with partial lists** — it's destructive, replaces ALL vars
 - **Don't use GKChatty** unless David explicitly requests it
 - **Don't use localhost:4002 for PostForMe testing** — wrong database, messages disappear
+

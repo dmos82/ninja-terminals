@@ -13,6 +13,10 @@ const { TaskDAG } = require('./lib/task-dag');
 const { selectTerminal } = require('./lib/scheduler');
 const { CircuitBreaker, RetryBudget, Supervisor, classifyError } = require('./lib/resilience');
 const { writeWorkerSettings } = require('./lib/settings-gen');
+const { rateTools } = require('./lib/tool-rater');
+const { parsePlaybooks, getPlaybookUsage, promotePlaybooks } = require('./lib/playbook-tracker');
+const { isImmutable, safeWrite, safeAppend } = require('./lib/safe-file-writer');
+const { logEvolution } = require('./lib/evolution-writer');
 
 // ── Config ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3300;
@@ -561,6 +565,116 @@ app.delete('/api/tasks/:id', (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// ── Self-Improvement Metrics API ────────────────────────────
+
+app.get('/api/metrics/tools', async (_req, res) => {
+  try {
+    const ratings = await rateTools();
+    const result = {};
+    for (const [tool, data] of ratings) result[tool] = data;
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to compute tool ratings', detail: err.message });
+  }
+});
+
+app.get('/api/metrics/sessions', (req, res) => {
+  try {
+    const summariesPath = path.join(__dirname, 'orchestrator', 'metrics', 'summaries.ndjson');
+    const fs = require('fs');
+    if (!fs.existsSync(summariesPath)) return res.json([]);
+    const lines = fs.readFileSync(summariesPath, 'utf8').trim().split('\n').filter(Boolean);
+    const limit = parseInt(req.query?.limit) || 50;
+    const summaries = lines.slice(-limit).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    res.json(summaries);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read sessions', detail: err.message });
+  }
+});
+
+app.get('/api/metrics/friction', (_req, res) => {
+  try {
+    const summariesPath = path.join(__dirname, 'orchestrator', 'metrics', 'summaries.ndjson');
+    const fs = require('fs');
+    if (!fs.existsSync(summariesPath)) return res.json({ friction_points: [], total_sessions: 0 });
+    const lines = fs.readFileSync(summariesPath, 'utf8').trim().split('\n').filter(Boolean);
+    const sessions = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+
+    const toolAgg = {};
+    for (const s of sessions) {
+      if (!s.tools) continue;
+      for (const [tool, stats] of Object.entries(s.tools)) {
+        if (!toolAgg[tool]) toolAgg[tool] = { failures: 0, invocations: 0, sessions: 0 };
+        toolAgg[tool].failures += stats.failures || 0;
+        toolAgg[tool].invocations += stats.invocations || 0;
+        toolAgg[tool].sessions++;
+      }
+    }
+
+    const friction = Object.entries(toolAgg)
+      .filter(([, v]) => v.failures > 0 && v.sessions >= 2)
+      .map(([tool, v]) => ({
+        tool,
+        failure_rate: v.invocations > 0 ? +(v.failures / v.invocations).toFixed(3) : 0,
+        total_failures: v.failures,
+        across_sessions: v.sessions,
+      }))
+      .sort((a, b) => b.failure_rate - a.failure_rate);
+
+    res.json({ friction_points: friction, total_sessions: sessions.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to compute friction', detail: err.message });
+  }
+});
+
+app.post('/api/orchestrator/evolve', (req, res) => {
+  try {
+    const { action, target, content, reason, evidence } = req.body || {};
+    if (!action || !target) return res.status(400).json({ error: 'action and target required' });
+
+    const allowedTargets = ['playbooks.md', 'tool-registry.md'];
+    const targetBase = path.basename(target);
+    if (!allowedTargets.includes(targetBase)) {
+      return res.status(403).json({ error: `Can only evolve: ${allowedTargets.join(', ')}` });
+    }
+    if (isImmutable(target)) {
+      return res.status(403).json({ error: `${targetBase} is immutable` });
+    }
+
+    const targetPath = path.join(__dirname, 'orchestrator', targetBase);
+
+    if (action === 'append') safeAppend(targetPath, '\n' + content);
+    else if (action === 'replace') safeWrite(targetPath, content);
+    else return res.status(400).json({ error: 'action must be "append" or "replace"' });
+
+    logEvolution({
+      file: `orchestrator/${targetBase}`,
+      change: (content || '').substring(0, 200),
+      why: reason || 'No reason provided',
+      evidence: evidence || 'No evidence provided',
+      reversible: 'yes',
+    });
+
+    sse.broadcast('evolution', { action, target: targetBase, reason, ts: new Date().toISOString() });
+    res.json({ ok: true, action, target: targetBase });
+  } catch (err) {
+    res.status(500).json({ error: 'Evolution failed', detail: err.message });
+  }
+});
+
+app.get('/api/metrics/playbooks', (_req, res) => {
+  try {
+    const playbooksPath = path.join(__dirname, 'orchestrator', 'playbooks.md');
+    const summariesPath = path.join(__dirname, 'orchestrator', 'metrics', 'summaries.ndjson');
+    const parsed = parsePlaybooks(playbooksPath);
+    const usage = getPlaybookUsage(summariesPath);
+    const promotions = promotePlaybooks(playbooksPath, summariesPath);
+    res.json({ playbooks: parsed, usage: Object.fromEntries(usage), promotions });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to analyze playbooks', detail: err.message });
   }
 });
 
