@@ -1,7 +1,7 @@
 # Session: 2026-03-23 — Self-Improving Orchestrator Setup
 
 ## Goal
-Design and implement a self-improving orchestrator system for Ninja Terminal that evolves its own prompts, tools, and workflows over time.
+Design and implement a self-improving orchestrator system for Ninja Terminals that evolves its own prompts, tools, and workflows over time.
 
 ## What Was Done
 

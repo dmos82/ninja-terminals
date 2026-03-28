@@ -1,13 +1,24 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg: #0a0a0a;
-  --surface: #111;
-  --border: #222;
-  --border-active: #444;
-  --text: #ccc;
-  --text-dim: #666;
-  --text-bright: #eee;
+  /* ── Retro Command Cards palette ── */
+  --bg: #0C0C0C;
+  --surface: #161616;
+  --border: #252525;
+  --border-active: #3a3a3a;
+  --text: #C8C0B4;
+  --text-dim: #5A5650;
+  --text-bright: #E8E0D4;
+
+  /* Cream accent for labels/badges */
+  --cream: #F0E8D8;
+  --cream-dark: #666054;
+
+  /* 4 terminal identity colors (warm-shifted retro) */
+  --feed-t1: #1B8A9E;   /* deep teal */
+  --feed-t2: #D94B2B;   /* deep coral */
+  --feed-t3: #E8A917;   /* golden amber */
+  --feed-t4: #7B4FBF;   /* rich purple */
 
   /* 7-state color system */
   --state-idle: #6B7280;
@@ -18,22 +29,16 @@
   --state-compacting: #8B5CF6;
   --state-waiting-approval: #F97316;
 
-  /* Terminal feed colors */
-  --feed-t1: #3B82F6;
-  --feed-t2: #22C55E;
-  --feed-t3: #F59E0B;
-  --feed-t4: #8B5CF6;
-
-  --sidebar-width: 250px;
+  --sidebar-width: 260px;
   --status-bar-height: 32px;
-  --pane-header-height: 40px;
-  --progress-height: 4px;
+  --pane-header-height: 44px;
+  --progress-height: 3px;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   height: 100vh;
   overflow: hidden;
 }
@@ -42,7 +47,7 @@ body {
 
 #app {
   display: flex;
-  height: calc(100vh - var(--status-bar-height));
+  height: calc(100vh - var(--status-bar-height) - 4px); /* 4px for bottom stripe */
 }
 
 /* ── Sidebar ────────────────────────────────── */
@@ -66,33 +71,65 @@ body {
 
 .sidebar-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 40px;
-  padding: 0 12px;
+  flex-direction: column;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: relative;
+}
+
+/* ── Logo Card (cream retro label) ── */
+
+.logo-card {
+  background: var(--cream);
+  padding: 14px 16px 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-bright);
-  letter-spacing: -0.5px;
-  white-space: nowrap;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 5px;
+  color: var(--bg);
+  line-height: 1;
 }
 
+.logo-sub {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--cream-dark);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* 4-color stripe band below logo */
+.logo-stripes {
+  display: flex;
+  height: 6px;
+  flex-shrink: 0;
+}
+.logo-stripes .stripe { flex: 1; }
+.logo-stripes .s1 { background: var(--feed-t1); }
+.logo-stripes .s2 { background: var(--feed-t2); }
+.logo-stripes .s3 { background: var(--feed-t3); }
+.logo-stripes .s4 { background: var(--feed-t4); }
+
 .sidebar-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   background: none;
   border: none;
-  color: var(--text-dim);
+  color: var(--cream-dark);
   font-size: 14px;
   cursor: pointer;
   padding: 4px;
   line-height: 1;
   transition: color 0.15s;
+  z-index: 2;
 }
-.sidebar-toggle:hover { color: var(--text); }
+.sidebar-toggle:hover { color: var(--bg); }
 
 .sidebar-section {
   flex: 1;
@@ -103,12 +140,11 @@ body {
 }
 
 .sidebar-title {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 4px;
   color: var(--text-dim);
-  padding: 10px 12px 6px;
+  padding: 12px 16px 6px;
   flex-shrink: 0;
 }
 
@@ -130,11 +166,11 @@ body {
 }
 
 .feed-entry {
-  padding: 3px 12px;
+  padding: 3px 16px;
   font-size: 11px;
   line-height: 1.4;
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: baseline;
 }
 
@@ -146,7 +182,7 @@ body {
   font-size: 10px;
   color: var(--text-dim);
   white-space: nowrap;
-  font-family: 'SF Mono', 'Menlo', monospace;
+  font-family: 'Space Grotesk', monospace;
   flex-shrink: 0;
 }
 
@@ -172,7 +208,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 6px 16px;
   font-size: 11px;
   cursor: default;
 }
@@ -184,7 +220,7 @@ body {
 .task-dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 2px;
   flex-shrink: 0;
 }
 
@@ -203,7 +239,9 @@ body {
 }
 
 .task-status {
-  font-size: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
   color: var(--text-dim);
   text-transform: uppercase;
   flex-shrink: 0;
@@ -211,14 +249,16 @@ body {
 
 .add-task-btn {
   display: block;
-  width: calc(100% - 24px);
-  margin: 8px 12px;
+  width: calc(100% - 32px);
+  margin: 8px 16px;
   padding: 6px 0;
   background: transparent;
   border: 1px dashed var(--border);
-  border-radius: 4px;
   color: var(--text-dim);
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.15s;
   flex-shrink: 0;
@@ -292,26 +332,39 @@ main {
 .pane-header {
   display: flex;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 10px;
   background: var(--surface);
   height: var(--pane-header-height);
   flex-shrink: 0;
-  gap: 8px;
+  gap: 10px;
   cursor: default;
   user-select: none;
   position: relative;
 }
 
+/* ── Pane Label (retro cream badge) ── */
+
 .pane-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-bright);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--bg);
+  background: var(--cream);
+  padding: 2px 10px;
+  border-radius: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 140px;
+  max-width: 160px;
   cursor: default;
+  position: relative;
 }
+
+/* Color band on left edge of badge — set per terminal index via nth-child */
+.terminal-pane:nth-child(4n+1) .pane-label { border-left: 3px solid var(--feed-t1); }
+.terminal-pane:nth-child(4n+2) .pane-label { border-left: 3px solid var(--feed-t2); }
+.terminal-pane:nth-child(4n+3) .pane-label { border-left: 3px solid var(--feed-t3); }
+.terminal-pane:nth-child(4n+4) .pane-label { border-left: 3px solid var(--feed-t4); }
 
 .pane-label.editing {
   background: #1a1a1a;
@@ -321,15 +374,15 @@ main {
   outline: none;
   cursor: text;
   color: var(--text-bright);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
-  font-family: inherit;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 .pane-state {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   flex-shrink: 0;
 }
 
@@ -351,10 +404,11 @@ main {
 .state-icon.exited { background: var(--state-error); opacity: 0.5; }
 
 .state-text {
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.5px;
 }
 
 .state-text.idle { color: var(--state-idle); }
@@ -370,7 +424,7 @@ main {
 .pane-elapsed {
   font-size: 10px;
   color: var(--text-dim);
-  font-family: 'SF Mono', 'Menlo', monospace;
+  font-family: 'Space Grotesk', monospace;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -388,27 +442,30 @@ main {
 }
 
 .action-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  border: 1px solid var(--border);
   color: var(--text-dim);
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 10px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 10px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 2px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.12s;
   line-height: 1.4;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .action-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.12);
   color: var(--state-error);
   border-color: rgba(239, 68, 68, 0.3);
 }
@@ -481,7 +538,7 @@ main {
 .status-dot {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
+  border-radius: 2px;
   flex-shrink: 0;
 }
 
@@ -495,9 +552,24 @@ main {
 
 #status-progress {
   color: var(--text-dim);
-  font-family: 'SF Mono', 'Menlo', monospace;
+  font-family: 'Space Grotesk', monospace;
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
+
+/* ── Bottom Stripe Band ─────────────────────── */
+
+.status-stripes {
+  display: flex;
+  height: 4px;
+  flex-shrink: 0;
+}
+.status-stripes .stripe { flex: 1; }
+.status-stripes .s1 { background: var(--feed-t1); }
+.status-stripes .s2 { background: var(--feed-t2); }
+.status-stripes .s3 { background: var(--feed-t3); }
+.status-stripes .s4 { background: var(--feed-t4); }
 
 /* ── Animations ─────────────────────────────── */
 
@@ -546,7 +618,7 @@ main {
     position: fixed;
     top: 0;
     left: 0;
-    bottom: var(--status-bar-height);
+    bottom: calc(var(--status-bar-height) + 4px);
     z-index: 200;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
     margin-left: calc(-1 * var(--sidebar-width));
@@ -583,7 +655,7 @@ main {
   color: var(--text-dim);
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 2px;
   font-size: 16px;
   cursor: pointer;
   align-items: center;

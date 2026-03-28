@@ -1,11 +1,11 @@
-# Ninja Terminal — Research Findings (2026-03-11)
+# Ninja Terminals — Research Findings (2026-03-11)
 
 ## The Arsenal (What We Actually Have)
 
 ### Running Right Now
 | System | Status | What It Does |
 |--------|--------|-------------|
-| **Ninja Terminal** | localhost:3000 | 4 Claude Code Opus 4.6 terminals, orchestrated via chrome automation |
+| **Ninja Terminals** | localhost:3000 | 4 Claude Code Opus 4.6 terminals, orchestrated via chrome automation |
 | **OpenClaw/MoltenClawd** | Docker, 8+ days uptime | Telegram bot + GPT-5.2 + web search + Moltbook + StudyChat |
 | **PostForMe** | postforme.ca + MCP | Video generation (Remotion), Meta publishing, ads, scheduling |
 | **StudyChat** | Cloud service | RAG knowledge base, DMs, C2C messaging, user lookup |

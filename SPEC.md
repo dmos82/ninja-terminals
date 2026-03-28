@@ -1,4 +1,4 @@
-# Ninja Terminal — Spec
+# Ninja Terminals — Spec
 
 ## What It Is
 A localhost browser app for orchestrating multiple Claude Code terminal instances. One page, multiple terminals, status detection, minimal UI. The intelligence is in the orchestrator (Claude CLI driving it via chrome automation), not in the app.
@@ -61,7 +61,7 @@ GET  /health                 → { status: "ok", terminals: count }
 ## Frontend Layout
 ```
 ┌──────────────────────────────────────────────────┐
-│  ninja-terminal    [T1 ●] [T2 ○] [T3 ●] [T4 ○] [+] │
+│  ninja-terminals    [T1 ●] [T2 ○] [T3 ●] [T4 ○] [+] │
 ├───────────────────────┬──────────────────────────┤
 │                       │                          │
 │   Terminal 1          │   Terminal 2             │
@@ -105,7 +105,7 @@ GET  /health                 → { status: "ok", terminals: count }
 - No configuration UI (sane defaults, env vars for overrides)
 
 ## MCP Tools (auto-loaded)
-Each terminal runs `claude` from the ninja-terminal project directory, so it picks up:
+Each terminal runs `claude` from the ninja-terminals project directory, so it picks up:
 
 **Global (~/.claude/settings.json)**: gkchatty-kb, gkchatty-production, builder-pro-mcp, ui-tester, ai-bridge, miro, atlas-architect, shopify-printify
 
@@ -129,7 +129,7 @@ SHELL=/bin/zsh         # Shell to spawn (claude runs inside this)
 
 ## File Structure
 ```
-ninja-terminal/
+ninja-terminals/
 ├── package.json
 ├── server.js           # Express + WebSocket + PTY management + status detection
 ├── public/

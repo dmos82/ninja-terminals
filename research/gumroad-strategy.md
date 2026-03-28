@@ -151,7 +151,7 @@ The $39 Pro tier will be the volume seller (middle option bias).
 - **"AI Agent Orchestration"** is a specific, emerging niche — less competition than "AI prompts" or "ChatGPT templates"
 - **Blueprint format** — actionable architecture, not just theory or prompts
 - **Multi-terminal/multi-agent** focus — this is what developers actually need now
-- **Built with real experience** — we're literally running multi-agent orchestration (Ninja Terminal)
+- **Built with real experience** — we're literally running multi-agent orchestration (Ninja Terminals)
 
 ### Positioning Statement
 > "The practical blueprint for developers who want to orchestrate multiple AI agents working in parallel — based on real production experience, not theory."

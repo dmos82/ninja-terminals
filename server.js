@@ -567,7 +567,7 @@ app.delete('/api/tasks/:id', (req, res) => {
 // ── Start ───────────────────────────────────────────────────
 
 server.listen(PORT, () => {
-  console.log(`Ninja Terminal v2 running on http://localhost:${PORT}`);
+  console.log(`Ninja Terminals v2 running on http://localhost:${PORT}`);
 
   // Start SSE heartbeat
   sse.startHeartbeat(15000);

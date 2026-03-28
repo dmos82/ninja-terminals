@@ -1,4 +1,4 @@
-/* Ninja Terminal v2 — Frontend */
+/* Ninja Terminals v2 — Frontend */
 
 const WS_BASE = `ws://${location.host}`;
 const API_BASE = '';
@@ -188,10 +188,11 @@ function createTerminalUI(termData) {
     fontSize: 13,
     fontFamily: "'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
     theme: {
-      background: '#0a0a0a',
-      foreground: '#cccccc',
-      cursor: '#cccccc',
-      selectionBackground: '#334455',
+      background: '#0C0C0C',
+      foreground: '#C8C0B4',
+      cursor: '#E8A917',
+      cursorAccent: '#0C0C0C',
+      selectionBackground: '#2a2520',
     },
     scrollback: 5000,
     allowProposedApi: true,
@@ -615,7 +616,7 @@ function requestNotificationPermission() {
 function fireNotification(label, status) {
   if ('Notification' in window && Notification.permission === 'granted') {
     const icon = status === 'done' ? '\u2713' : '\u2717';
-    new Notification(`Ninja Terminal: ${label}`, {
+    new Notification(`Ninja Terminals: ${label}`, {
       body: `${icon} Terminal is ${status.toUpperCase()}`,
       tag: `ninja-${label}-${status}`,
     });
@@ -853,7 +854,7 @@ async function init() {
   // Initial status bar
   updateStatusBar();
 
-  addFeedEntry('Ninja Terminal v2 started');
+  addFeedEntry('Ninja Terminals v2 started');
 }
 
 init();

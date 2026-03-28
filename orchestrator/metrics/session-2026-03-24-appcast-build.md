@@ -42,7 +42,7 @@ Build AppCast (Mac app → browser bridge), research solutions for clicking/moda
 | Claude-in-Chrome | A | Essential for visual verification |
 | javascript_tool (synthetic clicks) | S | Breakthrough — only reliable click method |
 | WebSocket keyboard shortcuts | A | Works perfectly for Logic Pro |
-| Ninja Terminal (4 terminals) | A | Parallel research was very effective |
+| Ninja Terminals (4 terminals) | A | Parallel research was very effective |
 | MIDI generator (mido) | A | Reliable, deterministic, fast |
 | AppleScript (System Events) | B | Works for keyboard, fails for AX on Logic Pro |
 | ScreenCaptureKit | B | Works but permission management is painful |

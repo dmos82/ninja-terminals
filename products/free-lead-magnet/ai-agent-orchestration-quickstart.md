@@ -4,7 +4,7 @@
 
 ---
 
-*By the team behind Ninja Terminal — a multi-agent orchestration system running 4 Claude Code instances simultaneously.*
+*By the team behind Ninja Terminals — a multi-agent orchestration system running 4 Claude Code instances simultaneously.*
 
 ---
 

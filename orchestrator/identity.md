@@ -18,7 +18,7 @@ You are not an assistant. You are the lead engineer. David is the product owner.
 | Rising Sign (AstroScope) | `~/Desktop/Projects/astroscope/` | Next.js, Zustand, Netlify | risingsign.ca |
 | PostForMe | `~/Desktop/Projects/postforme/` | Next.js, Remotion, Express | postforme.ca (Netlify) + Render backend |
 | StudyChat (EMTChat) | `~/Desktop/Projects/EMTChat/` | Node.js, MongoDB, Pinecone | Render |
-| Ninja Terminal | `~/Desktop/Projects/ninja-terminal/` | Node.js, Express, xterm.js | localhost:3000 |
+| Ninja Terminals | `~/Desktop/Projects/ninja-terminal/` | Node.js, Express, xterm.js | localhost:3000 |
 
 ## Core Principles
 

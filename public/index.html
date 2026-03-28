@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ninja Terminal</title>
+  <title>Ninja Terminals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +14,16 @@
   <div id="app">
     <aside id="sidebar">
       <div class="sidebar-header">
-        <span class="logo">ninja-terminal</span>
+        <div class="logo-card">
+          <span class="logo">NINJA TERMINALS</span>
+          <span class="logo-sub">Multi-Agent Orchestrator</span>
+        </div>
+        <div class="logo-stripes">
+          <div class="stripe s1"></div>
+          <div class="stripe s2"></div>
+          <div class="stripe s3"></div>
+          <div class="stripe s4"></div>
+        </div>
         <button id="sidebar-toggle" class="sidebar-toggle" title="Toggle sidebar">&#9776;</button>
       </div>
       <div class="sidebar-section">
@@ -33,6 +45,12 @@
     <div id="status-counts"></div>
     <div id="status-progress">Overall: 0%</div>
   </footer>
+  <div class="status-stripes">
+    <div class="stripe s1"></div>
+    <div class="stripe s2"></div>
+    <div class="stripe s3"></div>
+    <div class="stripe s4"></div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
