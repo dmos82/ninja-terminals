@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ninja Terminals — 4 AI agents. One screen. Ship faster.</title>
+  <meta name="description" content="Run parallel Claude Code instances with real-time status detection, a self-improving orchestrator, and 170+ MCP tools. One command to start." />
+  <meta property="og:title" content="Ninja Terminals — 4 AI agents. One screen. Ship faster." />
+  <meta property="og:description" content="Run parallel Claude Code instances with real-time status detection, a self-improving orchestrator, and 170+ MCP tools." />
+  <meta property="og:image" content="https://ninjaterminals.com/og-image.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ninjaterminals.com" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ninja Terminals — 4 AI agents. One screen. Ship faster." />
+  <meta name="twitter:description" content="Run parallel Claude Code instances with a self-improving orchestrator and 170+ MCP tools." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Root ──────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:           #0C0C0C;
+      --surface:      #161616;
+      --border:       #252525;
+      --border-active:#3a3a3a;
+      --text:         #C8C0B4;
+      --text-dim:     #5A5650;
+      --text-bright:  #E8E0D4;
+      --cream:        #F0E8D8;
+      --cream-dark:   #666054;
+      --t1:           #1B8A9E;
+      --t2:           #D94B2B;
+      --t3:           #E8A917;
+      --t4:           #7B4FBF;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Stripe Band ───────────────────────────── */
+    .stripe-band {
+      display: flex;
+      height: 4px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .stripe-band .s { flex: 1; }
+    .stripe-band .s1 { background: var(--t1); }
+    .stripe-band .s2 { background: var(--t2); }
+    .stripe-band .s3 { background: var(--t3); }
+    .stripe-band .s4 { background: var(--t4); }
+    .stripe-band.thick { height: 6px; }
+
+    /* ── Nav ───────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+    }
+
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 5px;
+      color: var(--cream);
+      text-decoration: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo-badge {
+      background: var(--cream);
+      color: var(--bg);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 4px;
+      padding: 2px 10px 2px 8px;
+      border-radius: 2px;
+      border-left: 3px solid var(--t1);
+      line-height: 1.2;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--cream); }
+
+    .nav-links .nav-cta {
+      color: var(--cream);
+      border: 1px solid var(--border-active);
+      padding: 5px 14px;
+      border-radius: 2px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .nav-links .nav-cta:hover {
+      background: rgba(240, 232, 216, 0.07);
+      border-color: var(--cream-dark);
+    }
+
+    /* ── Hero ──────────────────────────────────── */
+    .hero {
+      padding: 100px 24px 80px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 28px;
+    }
+
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--t3);
+      opacity: 0.5;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(52px, 9vw, 96px);
+      letter-spacing: 3px;
+      color: var(--cream);
+      line-height: 0.95;
+      margin-bottom: 28px;
+    }
+
+    h1 .accent-t1 { color: var(--t1); }
+    h1 .accent-t2 { color: var(--t2); }
+
+    .hero-sub {
+      max-width: 640px;
+      margin: 0 auto 48px;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* ── Code Block / npx Command ──────────────── */
+    .npx-block {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border-active);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .npx-code {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--t3);
+      padding: 12px 20px;
+      letter-spacing: 0.5px;
+      user-select: all;
+    }
+
+    .npx-code .cmd-dim { color: var(--text-dim); }
+
+    .copy-btn {
+      background: var(--border);
+      border: none;
+      border-left: 1px solid var(--border-active);
+      color: var(--text-dim);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 0 16px;
+      height: 100%;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.07);
+      color: var(--cream);
+    }
+
+    .copy-btn.copied {
+      color: #22C55E;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 72px;
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border: 1px solid var(--border-active);
+      padding: 9px 22px;
+      border-radius: 2px;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--text-dim);
+      color: var(--cream);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* ── App Preview ───────────────────────────── */
+    .app-preview {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border-active);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    .preview-topbar {
+      background: #111111;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .preview-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .preview-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .preview-dot.red    { background: #EF4444; opacity: 0.6; }
+    .preview-dot.yellow { background: var(--t3); opacity: 0.6; }
+    .preview-dot.green  { background: #22C55E; opacity: 0.6; }
+
+    .preview-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      flex: 1;
+      text-align: center;
+    }
+
+    .preview-body {
+      display: flex;
+      height: 360px;
+    }
+
+    /* Sidebar strip */
+    .preview-sidebar {
+      width: 180px;
+      min-width: 180px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-logo-card {
+      background: var(--cream);
+      padding: 10px 12px 8px;
+    }
+
+    .preview-logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 4px;
+      color: var(--bg);
+    }
+
+    .preview-logo-sub {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8px;
+      letter-spacing: 2.5px;
+      color: var(--cream-dark);
+      text-transform: uppercase;
+    }
+
+    .preview-feed-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      padding: 10px 12px 4px;
+    }
+
+    .preview-feed-lines {
+      padding: 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .pfl {
+      height: 8px;
+      border-radius: 2px;
+      opacity: 0.6;
+    }
+    .pfl.t1 { background: var(--t1); width: 85%; }
+    .pfl.t2 { background: var(--t2); width: 70%; }
+    .pfl.t3 { background: var(--t3); width: 90%; }
+    .pfl.t4 { background: var(--t4); width: 60%; }
+    .pfl.dim { background: var(--border-active); width: 75%; }
+    .pfl.dim2 { background: var(--border-active); width: 50%; }
+
+    /* Grid of 4 terminals */
+    .preview-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .preview-pane {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-pane-header {
+      background: var(--surface);
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-badge {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      background: var(--cream);
+      color: var(--bg);
+      padding: 1px 7px;
+      border-radius: 2px;
+    }
+
+    .preview-badge.b1 { border-left: 2px solid var(--t1); }
+    .preview-badge.b2 { border-left: 2px solid var(--t2); }
+    .preview-badge.b3 { border-left: 2px solid var(--t3); }
+    .preview-badge.b4 { border-left: 2px solid var(--t4); }
+
+    .preview-state-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .preview-state-dot.done    { background: #22C55E; }
+    .preview-state-dot.working { background: #3B82F6; }
+    .preview-state-dot.idle    { background: #6B7280; }
+    .preview-state-dot.blocked { background: #F59E0B; }
+
+    .preview-state-text {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .preview-state-text.done    { color: #22C55E; }
+    .preview-state-text.working { color: #3B82F6; }
+    .preview-state-text.idle    { color: #6B7280; }
+    .preview-state-text.blocked { color: #F59E0B; }
+
+    .preview-pane-body {
+      flex: 1;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .pbl {
+      height: 7px;
+      border-radius: 2px;
+      background: var(--border-active);
+    }
+    .pbl.w100 { width: 100%; }
+    .pbl.w80  { width: 80%; }
+    .pbl.w65  { width: 65%; }
+    .pbl.w90  { width: 90%; }
+    .pbl.w45  { width: 45%; }
+    .pbl.w70  { width: 70%; }
+    .pbl.w55  { width: 55%; }
+    .pbl.t1   { background: rgba(27, 138, 158, 0.25); }
+    .pbl.t2   { background: rgba(217, 75, 43, 0.2); }
+    .pbl.t3   { background: rgba(232, 169, 23, 0.2); }
+    .pbl.t4   { background: rgba(123, 79, 191, 0.2); }
+
+    .preview-progress {
+      height: 3px;
+      margin-top: auto;
+    }
+    .preview-progress.done    { background: #22C55E; }
+    .preview-progress.working { background: #3B82F6; width: 60%; }
+    .preview-progress.idle    { background: #6B7280; width: 30%; }
+    .preview-progress.blocked { background: #F59E0B; width: 50%; }
+
+    /* ── Section Scaffolding ───────────────────── */
+    section {
+      padding: 96px 24px;
+    }
+
+    .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(36px, 5vw, 54px);
+      letter-spacing: 2px;
+      color: var(--cream);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 17px;
+      color: var(--text);
+      max-width: 560px;
+      margin-bottom: 64px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── Features Grid ─────────────────────────── */
+    #features {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .feature-card {
+      background: var(--bg);
+      padding: 36px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .feature-card:nth-child(1)::before { background: var(--t1); }
+    .feature-card:nth-child(2)::before { background: var(--t2); }
+    .feature-card:nth-child(3)::before { background: var(--t3); }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .feature-card:nth-child(1) .feature-icon { background: rgba(27, 138, 158, 0.15); color: var(--t1); }
+    .feature-card:nth-child(2) .feature-icon { background: rgba(217, 75, 43, 0.15);  color: var(--t2); }
+    .feature-card:nth-child(3) .feature-icon { background: rgba(232, 169, 23, 0.15); color: var(--t3); }
+
+    .feature-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--cream);
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* ── How It Works ──────────────────────────── */
+    #how-it-works {
+      background: var(--bg);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .step-card {
+      background: var(--surface);
+      padding: 36px 32px;
+      position: relative;
+    }
+
+    .step-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 64px;
+      letter-spacing: -1px;
+      line-height: 1;
+      color: var(--border-active);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .step-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: var(--cream);
+      margin-bottom: 12px;
+    }
+
+    .step-desc {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .step-cmd {
+      display: inline-block;
+      margin-top: 12px;
+      font-family: 'Space Grotesk', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--t3);
+      background: var(--bg);
+      border: 1px solid var(--border-active);
+      padding: 4px 10px;
+      border-radius: 2px;
+    }
+
+    .step-connector {
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background: var(--bg);
+      border: 1px solid var(--border-active);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-dim);
+      z-index: 1;
+    }
+
+    /* ── Pricing ───────────────────────────────── */
+    #pricing {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      max-width: 800px;
+    }
+
+    .pricing-card {
+      background: var(--bg);
+      padding: 40px 36px;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      background: #111111;
+    }
+
+    .pricing-card.featured::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--t1), var(--t2), var(--t3), var(--t4));
+    }
+
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 3px;
+      background: var(--cream);
+      color: var(--bg);
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 24px;
+    }
+
+    .pricing-card:first-child .tier-badge { border-left: 3px solid var(--t1); }
+    .pricing-card.featured    .tier-badge { border-left: 3px solid var(--t3); }
+
+    .pricing-price {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 2px;
+      color: var(--cream);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pricing-note {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 28px;
+    }
+
+    .pricing-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .pricing-features li::before {
+      content: '';
+      display: block;
+      width: 14px;
+      height: 14px;
+      min-width: 14px;
+      min-height: 14px;
+      border-radius: 2px;
+      background: var(--border-active);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .pricing-card.featured .pricing-features li::before {
+      background: rgba(232, 169, 23, 0.3);
+    }
+
+    .pricing-card.featured .pricing-features li { color: var(--text-bright); }
+
+    /* ── Final CTA ─────────────────────────────── */
+    #cta {
+      padding: 100px 24px;
+      text-align: center;
+      background: var(--bg);
+    }
+
+    .cta-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+    }
+
+    #cta h2 {
+      font-size: clamp(40px, 6vw, 72px);
+      margin-bottom: 40px;
+    }
+
+    /* ── Footer ────────────────────────────────── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 4px;
+      color: var(--text-dim);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--cream); }
+
+    .footer-credit {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ── Responsive ────────────────────────────── */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 480px; }
+      .step-connector { display: none; }
+    }
+
+    @media (max-width: 680px) {
+      section { padding: 64px 20px; }
+      .hero { padding: 72px 20px 64px; }
+      .nav-inner { padding: 0 20px; }
+      .nav-links { gap: 16px; }
+      .nav-links a { font-size: 12px; }
+      .preview-sidebar { display: none; }
+      .preview-body { height: 260px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 480px) {
+      .nav-links li:not(:last-child):not(:nth-last-child(2)) { display: none; }
+      h1 { letter-spacing: 1px; }
+      .npx-code { font-size: 14px; padding: 10px 14px; }
+    }
+
+    /* ── Utility ───────────────────────────────── */
+    .mt-8  { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      height: 18px;
+      background: var(--t1);
+      vertical-align: middle;
+      margin-left: 3px;
+      border-radius: 1px;
+      animation: blink 1.1s step-end infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ──────────────────────────────────── -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="nav-logo-badge">Ninja Terminals</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="https://github.com/davidmini/ninja-terminal" class="nav-cta" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+    <div class="stripe-band">
+      <div class="s s1"></div><div class="s s2"></div><div class="s s3"></div><div class="s s4"></div>
+    </div>
+  </nav>
+
+  <!-- ── Hero ─────────────────────────────────── -->
+  <section class="hero">
+    <div class="section-inner" style="max-width: 900px;">
+      <div class="hero-eyebrow">Claude Code Orchestration</div>
+
+      <h1>4 AI agents.<br><span class="accent-t1">One screen.</span><br>Ship faster.</h1>
+
+      <p class="hero-sub">
+        Run parallel Claude Code instances with real-time status detection,
+        a self-improving orchestrator, and 170+ MCP tools.
+      </p>
+
+      <div class="hero-actions">
+        <div class="npx-block">
+          <code class="npx-code"><span class="cmd-dim">$</span> npx ninja-terminals</code>
+          <button class="copy-btn" id="hero-copy-btn" onclick="copyNpx('hero-copy-btn')">COPY</button>
+        </div>
+        <a href="https://github.com/davidmini/ninja-terminal" class="btn-ghost" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          View on GitHub
+        </a>
+      </div>
+
+      <!-- App Preview Mockup -->
+      <div class="app-preview">
+        <div class="preview-topbar">
+          <div class="preview-dots">
+            <div class="preview-dot red"></div>
+            <div class="preview-dot yellow"></div>
+            <div class="preview-dot green"></div>
+          </div>
+          <div class="preview-title">Ninja Terminals — localhost:3000</div>
+        </div>
+        <div class="preview-body">
+          <!-- Sidebar -->
+          <div class="preview-sidebar">
+            <div class="preview-logo-card">
+              <div class="preview-logo-text">NINJA TERMINALS</div>
+              <div class="preview-logo-sub">Multi-Agent CLI</div>
+            </div>
+            <div class="stripe-band thick">
+              <div class="s s1"></div><div class="s s2"></div><div class="s s3"></div><div class="s s4"></div>
+            </div>
+            <div class="preview-feed-label">Activity</div>
+            <div class="preview-feed-lines">
+              <div class="pfl t1"></div>
+              <div class="pfl t2"></div>
+              <div class="pfl dim"></div>
+              <div class="pfl t3"></div>
+              <div class="pfl dim2"></div>
+              <div class="pfl t4"></div>
+              <div class="pfl dim"></div>
+              <div class="pfl t1" style="width:55%"></div>
+              <div class="pfl dim2" style="width:80%"></div>
+              <div class="pfl t2" style="width:40%"></div>
+            </div>
+          </div>
+          <!-- Terminal Grid -->
+          <div class="preview-grid">
+            <!-- Pane 1 -->
+            <div class="preview-pane">
+              <div class="preview-pane-header">
+                <div class="preview-badge b1">RESEARCH</div>
+                <div class="preview-state-dot done"></div>
+                <div class="preview-state-text done">Done</div>
+              </div>
+              <div class="preview-pane-body">
+                <div class="pbl t1 w100"></div>
+                <div class="pbl t1 w80"></div>
+                <div class="pbl w65"></div>
+                <div class="pbl t1 w90"></div>
+                <div class="pbl w45"></div>
+                <div class="pbl t1 w70"></div>
+              </div>
+              <div class="preview-progress done" style="width:100%"></div>
+            </div>
+            <!-- Pane 2 -->
+            <div class="preview-pane">
+              <div class="preview-pane-header">
+                <div class="preview-badge b2">BUILD</div>
+                <div class="preview-state-dot working"></div>
+                <div class="preview-state-text working">Working</div>
+              </div>
+              <div class="preview-pane-body">
+                <div class="pbl w100"></div>
+                <div class="pbl t2 w80"></div>
+                <div class="pbl t2 w90"></div>
+                <div class="pbl w55"></div>
+                <div class="pbl t2 w65"></div>
+                <div class="pbl w80"></div>
+              </div>
+              <div class="preview-progress working"></div>
+            </div>
+            <!-- Pane 3 -->
+            <div class="preview-pane">
+              <div class="preview-pane-header">
+                <div class="preview-badge b3">TEST</div>
+                <div class="preview-state-dot working"></div>
+                <div class="preview-state-text working">Working</div>
+              </div>
+              <div class="preview-pane-body">
+                <div class="pbl t3 w100"></div>
+                <div class="pbl w70"></div>
+                <div class="pbl t3 w55"></div>
+                <div class="pbl w90"></div>
+                <div class="pbl t3 w65"></div>
+                <div class="pbl w45"></div>
+              </div>
+              <div class="preview-progress working" style="width:40%"></div>
+            </div>
+            <!-- Pane 4 -->
+            <div class="preview-pane">
+              <div class="preview-pane-header">
+                <div class="preview-badge b4">PUBLISH</div>
+                <div class="preview-state-dot idle"></div>
+                <div class="preview-state-text idle">Idle</div>
+              </div>
+              <div class="preview-pane-body">
+                <div class="pbl w65"></div>
+                <div class="pbl t4 w45"></div>
+                <div class="pbl w80"></div>
+                <div class="pbl t4 w55"></div>
+                <div class="pbl w35" style="width:35%"></div>
+                <div class="pbl t4 w70"></div>
+              </div>
+              <div class="preview-progress idle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ──────────────────────────────── -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="section-label">What it does</div>
+      <h2>Built for developers<br>who don't wait.</h2>
+      <p class="section-desc">
+        Stop babysitting one AI window. Ninja Terminals runs four agents in parallel
+        and lets them hand off work to each other automatically.
+      </p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg>
+          </div>
+          <div class="feature-title">Parallel Agents</div>
+          <p class="feature-desc">
+            Run 4+ Claude Code instances simultaneously in a browser-based terminal grid.
+            Each pane gets its own scope — research, build, test, publish — all running at once.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 2 12 12"/><path d="m15 2 7 0 0 7"/></svg>
+          </div>
+          <div class="feature-title">Self-Improving</div>
+          <p class="feature-desc">
+            Measures tool effectiveness, evolves playbooks, and rates what works based on real data.
+            The orchestrator gets smarter with every session.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <div class="feature-title">Zero Config</div>
+          <p class="feature-desc">
+            One command to start. No database, no cloud, no accounts.
+            Runs entirely on your machine using your own Claude API key.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How It Works ──────────────────────────── -->
+  <section id="how-it-works">
+    <div class="section-inner">
+      <div class="section-label">How it works</div>
+      <h2>From goal to shipped<br>in three steps.</h2>
+      <p class="section-desc">
+        No configuration files. No orchestration boilerplate.
+        Just describe what you want to build.
+      </p>
+      <div class="steps">
+        <div class="step-card">
+          <span class="step-number">01</span>
+          <div class="step-title">Start the server</div>
+          <p class="step-desc">
+            One command spins up a local Node server and opens Ninja Terminals in your browser.
+            Your existing Claude API key and MCP configs are auto-detected.
+          </p>
+          <code class="step-cmd">npx ninja-terminals</code>
+        </div>
+        <div class="step-card">
+          <span class="step-number">02</span>
+          <div class="step-title">Describe your goal</div>
+          <p class="step-desc">
+            Type your objective into the orchestrator. It breaks your goal into parallel subtasks
+            and assigns each one to a terminal — automatically.
+          </p>
+        </div>
+        <div class="step-card">
+          <span class="step-number">03</span>
+          <div class="step-title">Watch 4 agents execute</div>
+          <p class="step-desc">
+            Four Claude Code agents run simultaneously while you watch the activity feed.
+            Real-time status detection tells you exactly what each agent is doing.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Pricing ───────────────────────────────── -->
+  <section id="pricing">
+    <div class="section-inner">
+      <div class="section-label">What you get</div>
+      <h2>Open core.<br>Pay once, own it.</h2>
+      <p class="section-desc">
+        The core is free and open source. Pro is a one-time purchase — no subscriptions,
+        no seats, no vendor lock-in.
+      </p>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="tier-badge">Free / Open Source</div>
+          <div class="pricing-price">$0</div>
+          <div class="pricing-note">Forever. MIT license.</div>
+          <ul class="pricing-features">
+            <li>4 parallel Claude Code terminals</li>
+            <li>Real-time status detection (7 states)</li>
+            <li>Activity feed and task queue</li>
+            <li>Progress tracking per pane</li>
+            <li>Works with any MCP config</li>
+            <li>Runs entirely on your machine</li>
+          </ul>
+        </div>
+        <div class="pricing-card featured">
+          <div class="tier-badge">Pro — One-Time</div>
+          <div class="pricing-price">$39</div>
+          <div class="pricing-note">Pay once. Keep forever.</div>
+          <ul class="pricing-features">
+            <li>Everything in Free</li>
+            <li>Self-improving orchestrator system</li>
+            <li>Evolving playbooks with session metrics</li>
+            <li>CLAUDE.md templates for 10+ project types</li>
+            <li>170+ MCP tool configs, pre-wired</li>
+            <li>Setup guide and onboarding walkthrough</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Final CTA ─────────────────────────────── -->
+  <section id="cta">
+    <div class="section-inner" style="max-width: 700px; text-align: center; margin: 0 auto;">
+      <div class="cta-label">Get started now</div>
+      <h2>Start building with<br>4x the agents.</h2>
+      <div class="hero-actions" style="margin-top: 40px;">
+        <div class="npx-block">
+          <code class="npx-code"><span class="cmd-dim">$</span> npx ninja-terminals</code>
+          <button class="copy-btn" id="cta-copy-btn" onclick="copyNpx('cta-copy-btn')">COPY</button>
+        </div>
+        <a href="https://github.com/davidmini/ninja-terminal" class="btn-ghost" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4-color band before footer ───────────────── -->
+  <div class="stripe-band thick">
+    <div class="s s1"></div><div class="s s2"></div><div class="s s3"></div><div class="s s4"></div>
+  </div>
+
+  <!-- ── Footer ───────────────────────────────── -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">Ninja Terminals</div>
+      <ul class="footer-links">
+        <li><a href="https://github.com/davidmini/ninja-terminal" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://twitter.com/ninjaterminals" target="_blank" rel="noopener">Twitter</a></li>
+        <li><a href="https://ninjaterminals.com">ninjaterminals.com</a></li>
+      </ul>
+      <div class="footer-credit">Built with Ninja Terminals</div>
+    </div>
+  </footer>
+
+  <script>
+    function copyNpx(btnId) {
+      const text = 'npx ninja-terminals';
+      navigator.clipboard.writeText(text).then(function () {
+        var btn = document.getElementById(btnId);
+        btn.textContent = 'COPIED';
+        btn.classList.add('copied');
+        setTimeout(function () {
+          btn.textContent = 'COPY';
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(function () {
+        // Fallback for non-https
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        var btn = document.getElementById(btnId);
+        btn.textContent = 'COPIED';
+        btn.classList.add('copied');
+        setTimeout(function () {
+          btn.textContent = 'COPY';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>
