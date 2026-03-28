@@ -2,13 +2,41 @@
   "name": "ninja-terminals",
   "version": "2.0.0",
   "description": "Multi-terminal Claude Code orchestrator with DAG task management, permission hooks, and resilience",
-  "main": "index.js",
+  "main": "server.js",
+  "bin": {
+    "ninja-terminals": "./cli.js"
+  },
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [],
+  "files": [
+    "lib/",
+    "public/",
+    "orchestrator/",
+    "cli.js",
+    "server.js",
+    "CLAUDE.md",
+    "ORCHESTRATOR-PROMPT.md"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "terminal",
+    "orchestrator",
+    "agents",
+    "multi-agent"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidmorin/ninja-terminals"
+  },
+  "homepage": "https://ninjaterminals.com",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
