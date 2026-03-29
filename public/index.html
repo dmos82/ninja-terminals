@@ -11,12 +11,41 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Auth Overlay -->
+  <div id="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-stripes">
+        <div class="stripe s1"></div>
+        <div class="stripe s2"></div>
+        <div class="stripe s3"></div>
+        <div class="stripe s4"></div>
+      </div>
+      <div class="auth-card-inner">
+        <h1 class="logo-text">NINJA TERMINALS</h1>
+        <p class="auth-subtitle">Multi-Agent Claude Code Orchestrator</p>
+        <form id="login-form">
+          <input type="text" id="login-email" placeholder="Email or username" required autocomplete="username">
+          <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+          <button type="submit" class="auth-btn">Sign In</button>
+          <p class="auth-error" id="login-error"></p>
+        </form>
+        <div class="auth-divider"><span>or</span></div>
+        <form id="license-form">
+          <input type="text" id="license-key" placeholder="Enter license key" autocomplete="off">
+          <button type="submit" class="auth-btn auth-btn-secondary">Activate License</button>
+        </form>
+        <p class="auth-footer">Don't have an account? <a href="https://ninjaterminals.com" target="_blank">Sign up</a></p>
+      </div>
+    </div>
+  </div>
+
   <div id="app">
     <aside id="sidebar">
       <div class="sidebar-header">
         <div class="logo-card">
           <span class="logo">NINJA TERMINALS</span>
           <span class="logo-sub">Multi-Agent Orchestrator</span>
+          <button id="logout-btn" class="logout-btn" title="Sign out">Logout</button>
         </div>
         <div class="logo-stripes">
           <div class="stripe s1"></div>

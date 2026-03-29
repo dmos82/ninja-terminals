@@ -14,6 +14,7 @@ const { selectTerminal } = require('./lib/scheduler');
 const { CircuitBreaker, RetryBudget, Supervisor, classifyError } = require('./lib/resilience');
 const { writeWorkerSettings } = require('./lib/settings-gen');
 const { rateTools } = require('./lib/tool-rater');
+const { createAuthMiddleware, validateWebSocketToken, startSessionHeartbeat } = require('./lib/auth');
 const { parsePlaybooks, getPlaybookUsage, promotePlaybooks } = require('./lib/playbook-tracker');
 const { isImmutable, safeWrite, safeAppend } = require('./lib/safe-file-writer');
 const { logEvolution } = require('./lib/evolution-writer');
@@ -39,6 +40,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── Global State ────────────────────────────────────────────
 let nextId = 1;
 const terminals = new Map();
+
+// Session state for auth
+const sessionCache = new Map(); // token -> { tier, terminalsMax, features, validatedAt }
+let activeSession = null; // { token, tier, terminalsMax, features, terminalIds: [] }
+
+// Auth middleware — skip for static, health, and public endpoints
+const authMiddleware = createAuthMiddleware(sessionCache);
+const requireAuth = (req, res, next) => {
+  // Skip auth for these paths
+  const skipPaths = ['/', '/health', '/api/events'];
+  if (skipPaths.includes(req.path)) {
+    return next();
+  }
+  // Apply auth
+  return authMiddleware(req, res, next);
+};
 
 const sse = new SSEManager();
 const taskDag = new TaskDAG();
@@ -87,7 +104,7 @@ function getTerminalRules(terminalId) {
 
 // ── Terminal Spawning ───────────────────────────────────────
 
-function spawnTerminal(label, scope = [], cwd = null) {
+function spawnTerminal(label, scope = [], cwd = null, tier = 'pro') {
   const id = nextId++;
   const cols = 120;
   const rows = 30;
@@ -98,7 +115,7 @@ function spawnTerminal(label, scope = [], cwd = null) {
 
   // Write worker settings to the TARGET project (not ninja-terminal)
   try {
-    writeWorkerSettings(id, settingsDir, scope, { port: PORT });
+    writeWorkerSettings(id, settingsDir, scope, { port: PORT, tier });
   } catch (e) {
     console.error(`Failed to write worker settings for terminal ${id}:`, e.message);
   }
@@ -247,9 +264,26 @@ setInterval(() => {
 
 // ── WebSocket Upgrade ───────────────────────────────────────
 
-server.on('upgrade', (req, socket, head) => {
-  const match = req.url.match(/^\/ws\/(\d+)$/);
+server.on('upgrade', async (req, socket, head) => {
+  // Parse URL for terminal ID and token
+  const urlParts = new URL(req.url, `http://${req.headers.host}`);
+  const match = urlParts.pathname.match(/^\/ws\/(\d+)$/);
   if (!match) {
+    socket.destroy();
+    return;
+  }
+
+  // Validate token from query param
+  const token = urlParts.searchParams.get('token');
+  if (!token) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+
+  const validation = await validateWebSocketToken(token, sessionCache);
+  if (!validation.valid) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     socket.destroy();
     return;
   }
@@ -303,11 +337,130 @@ app.get('/health', (_req, res) => {
     terminals: terminals.size,
     sseClients: sse.clientCount,
     uptime: process.uptime(),
+    session: activeSession ? { tier: activeSession.tier, terminalsMax: activeSession.terminalsMax } : null,
+  });
+});
+
+// ── Session Endpoints ───────────────────────────────────────
+
+// Create session — validates token and spawns terminals
+app.post('/api/session', requireAuth, (req, res) => {
+  try {
+    const { tier, terminalsMax, features, token } = req.ninjaUser;
+
+    // Clear any existing session
+    if (activeSession) {
+      // Kill existing terminals
+      for (const id of activeSession.terminalIds) {
+        const terminal = terminals.get(id);
+        if (terminal) {
+          terminal.pty.kill();
+          for (const ws of terminal.clients) ws.close();
+          terminals.delete(id);
+        }
+      }
+    }
+
+    // Create new session
+    activeSession = {
+      token,
+      tier,
+      terminalsMax,
+      features,
+      terminalIds: [],
+      createdAt: Date.now(),
+    };
+
+    // Spawn terminals up to the tier limit
+    const cwd = req.body?.cwd || DEFAULT_CWD;
+    const spawnedTerminals = [];
+
+    for (let i = 0; i < terminalsMax; i++) {
+      const terminal = spawnTerminal(`T${i + 1}`, [], cwd, tier);
+      activeSession.terminalIds.push(terminal.id);
+      spawnedTerminals.push({
+        id: terminal.id,
+        label: terminal.label,
+        status: terminal.status,
+        cwd: terminal.cwd,
+      });
+    }
+
+    console.log(`[session] Created session: tier=${tier}, terminals=${terminalsMax}`);
+
+    res.json({
+      tier,
+      terminalsMax,
+      features,
+      terminals: spawnedTerminals,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create session', detail: err.message });
+  }
+});
+
+// Delete session — kills all terminals
+app.delete('/api/session', requireAuth, async (req, res) => {
+  try {
+    if (!activeSession) {
+      return res.json({ ok: true, message: 'No active session' });
+    }
+
+    // Kill all session terminals
+    for (const id of activeSession.terminalIds) {
+      const terminal = terminals.get(id);
+      if (terminal && terminal.status !== 'exited') {
+        terminal.pty.kill('SIGTERM');
+        await sleep(1000);
+        if (terminal.status !== 'exited') {
+          terminal.pty.kill('SIGKILL');
+        }
+        for (const ws of terminal.clients) ws.close();
+        terminals.delete(id);
+      }
+    }
+
+    // Clear session
+    const sessionTier = activeSession.tier;
+    sessionCache.delete(activeSession.token);
+    activeSession = null;
+
+    console.log(`[session] Destroyed session: tier=${sessionTier}`);
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete session', detail: err.message });
+  }
+});
+
+// Get session info
+app.get('/api/session', requireAuth, (req, res) => {
+  if (!activeSession) {
+    return res.status(404).json({ error: 'No active session' });
+  }
+
+  const sessionTerminals = activeSession.terminalIds.map(id => {
+    const t = terminals.get(id);
+    if (!t) return null;
+    return {
+      id: t.id,
+      label: t.label,
+      status: t.status,
+      elapsed: getElapsed(t),
+    };
+  }).filter(Boolean);
+
+  res.json({
+    tier: activeSession.tier,
+    terminalsMax: activeSession.terminalsMax,
+    features: activeSession.features,
+    terminals: sessionTerminals,
+    createdAt: activeSession.createdAt,
   });
 });
 
 // List terminals
-app.get('/api/terminals', (req, res) => {
+app.get('/api/terminals', requireAuth, (req, res) => {
   const list = [];
   for (const [, t] of terminals) {
     const recentLines = t.lineBuffer.last(50);
@@ -332,12 +485,28 @@ app.get('/api/terminals', (req, res) => {
 });
 
 // Spawn terminal
-app.post('/api/terminals', (req, res) => {
+app.post('/api/terminals', requireAuth, (req, res) => {
   try {
+    const { tier, terminalsMax } = req.ninjaUser;
+
+    // Check terminal limit
+    if (activeSession && activeSession.terminalIds.length >= terminalsMax) {
+      return res.status(403).json({
+        error: 'Terminal limit reached',
+        detail: `Your ${tier} tier allows ${terminalsMax} terminal(s)`,
+      });
+    }
+
     const label = req.body?.label;
     const scope = req.body?.scope || [];
     const cwd = req.body?.cwd || null;
-    const terminal = spawnTerminal(label, scope, cwd);
+    const terminal = spawnTerminal(label, scope, cwd, tier);
+
+    // Track in session
+    if (activeSession) {
+      activeSession.terminalIds.push(terminal.id);
+    }
+
     res.json({ id: terminal.id, label: terminal.label, status: terminal.status, scope: terminal.scope, cwd: terminal.cwd });
   } catch (err) {
     res.status(500).json({ error: 'Failed to spawn terminal', detail: err.message });
@@ -345,7 +514,7 @@ app.post('/api/terminals', (req, res) => {
 });
 
 // Delete terminal
-app.delete('/api/terminals/:id', (req, res) => {
+app.delete('/api/terminals/:id', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -353,15 +522,22 @@ app.delete('/api/terminals/:id', (req, res) => {
   terminal.pty.kill();
   for (const ws of terminal.clients) ws.close();
   terminals.delete(id);
+
+  // Remove from active session
+  if (activeSession) {
+    activeSession.terminalIds = activeSession.terminalIds.filter(tid => tid !== id);
+  }
+
   res.json({ ok: true });
 });
 
 // Restart terminal
-app.post('/api/terminals/:id/restart', (req, res) => {
+app.post('/api/terminals/:id/restart', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
 
+  const { tier } = req.ninjaUser;
   const label = terminal.label;
   const scope = terminal.scope;
   const termCwd = terminal.cwd;
@@ -369,12 +545,19 @@ app.post('/api/terminals/:id/restart', (req, res) => {
   for (const ws of terminal.clients) ws.close();
   terminals.delete(id);
 
-  const newTerminal = spawnTerminal(label, scope, termCwd);
+  const newTerminal = spawnTerminal(label, scope, termCwd, tier);
+
+  // Update session tracking
+  if (activeSession) {
+    activeSession.terminalIds = activeSession.terminalIds.filter(tid => tid !== id);
+    activeSession.terminalIds.push(newTerminal.id);
+  }
+
   res.json({ id: newTerminal.id, label: newTerminal.label, status: newTerminal.status });
 });
 
 // Send input
-app.post('/api/terminals/:id/input', (req, res) => {
+app.post('/api/terminals/:id/input', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -387,7 +570,7 @@ app.post('/api/terminals/:id/input', (req, res) => {
 });
 
 // Set label
-app.post('/api/terminals/:id/label', (req, res) => {
+app.post('/api/terminals/:id/label', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -397,7 +580,7 @@ app.post('/api/terminals/:id/label', (req, res) => {
 });
 
 // Get status
-app.get('/api/terminals/:id/status', (req, res) => {
+app.get('/api/terminals/:id/status', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -416,7 +599,7 @@ app.get('/api/terminals/:id/status', (req, res) => {
 });
 
 // Paginated output
-app.get('/api/terminals/:id/output', (req, res) => {
+app.get('/api/terminals/:id/output', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -428,7 +611,7 @@ app.get('/api/terminals/:id/output', (req, res) => {
 });
 
 // Structured log
-app.get('/api/terminals/:id/log', (req, res) => {
+app.get('/api/terminals/:id/log', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -437,7 +620,7 @@ app.get('/api/terminals/:id/log', (req, res) => {
 });
 
 // Graceful kill
-app.post('/api/terminals/:id/kill', async (req, res) => {
+app.post('/api/terminals/:id/kill', requireAuth, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -459,7 +642,7 @@ app.post('/api/terminals/:id/kill', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Permission evaluation hook endpoint
+// Permission evaluation hook endpoint (no auth — called by Claude Code hooks)
 app.post('/api/terminals/:id/evaluate', createEvaluateMiddleware(getTerminalRules));
 
 // Worker stopped hook endpoint
@@ -495,7 +678,7 @@ app.post('/api/terminals/:id/compacted', (req, res) => {
 });
 
 // Assign task to terminal
-app.post('/api/terminals/:id/task', (req, res) => {
+app.post('/api/terminals/:id/task', requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -537,7 +720,7 @@ app.get('/api/events', (req, res) => {
 
 // ── Task DAG ────────────────────────────────────────────────
 
-app.get('/api/tasks', (_req, res) => {
+app.get('/api/tasks', requireAuth, (_req, res) => {
   try {
     res.json(taskDag.toJSON());
   } catch (err) {
@@ -545,7 +728,7 @@ app.get('/api/tasks', (_req, res) => {
   }
 });
 
-app.post('/api/tasks', (req, res) => {
+app.post('/api/tasks', requireAuth, (req, res) => {
   try {
     const { id, name, description, dependencies, scope } = req.body || {};
     if (!id || !name) return res.status(400).json({ error: 'id and name required' });
@@ -558,7 +741,7 @@ app.post('/api/tasks', (req, res) => {
   }
 });
 
-app.delete('/api/tasks/:id', (req, res) => {
+app.delete('/api/tasks/:id', requireAuth, (req, res) => {
   try {
     taskDag.removeTask(req.params.id);
     sse.broadcast('task_removed', { id: req.params.id, ts: new Date().toISOString() });
@@ -570,7 +753,7 @@ app.delete('/api/tasks/:id', (req, res) => {
 
 // ── Self-Improvement Metrics API ────────────────────────────
 
-app.get('/api/metrics/tools', async (_req, res) => {
+app.get('/api/metrics/tools', requireAuth, async (_req, res) => {
   try {
     const ratings = await rateTools();
     const result = {};
@@ -581,7 +764,7 @@ app.get('/api/metrics/tools', async (_req, res) => {
   }
 });
 
-app.get('/api/metrics/sessions', (req, res) => {
+app.get('/api/metrics/sessions', requireAuth, (req, res) => {
   try {
     const summariesPath = path.join(__dirname, 'orchestrator', 'metrics', 'summaries.ndjson');
     const fs = require('fs');
@@ -595,7 +778,7 @@ app.get('/api/metrics/sessions', (req, res) => {
   }
 });
 
-app.get('/api/metrics/friction', (_req, res) => {
+app.get('/api/metrics/friction', requireAuth, (_req, res) => {
   try {
     const summariesPath = path.join(__dirname, 'orchestrator', 'metrics', 'summaries.ndjson');
     const fs = require('fs');
@@ -630,7 +813,7 @@ app.get('/api/metrics/friction', (_req, res) => {
   }
 });
 
-app.post('/api/orchestrator/evolve', (req, res) => {
+app.post('/api/orchestrator/evolve', requireAuth, (req, res) => {
   try {
     const { action, target, content, reason, evidence } = req.body || {};
     if (!action || !target) return res.status(400).json({ error: 'action and target required' });
@@ -665,7 +848,7 @@ app.post('/api/orchestrator/evolve', (req, res) => {
   }
 });
 
-app.get('/api/metrics/playbooks', (_req, res) => {
+app.get('/api/metrics/playbooks', requireAuth, (_req, res) => {
   try {
     const playbooksPath = path.join(__dirname, 'orchestrator', 'playbooks.md');
     const summariesPath = path.join(__dirname, 'orchestrator', 'metrics', 'summaries.ndjson');
@@ -678,18 +861,38 @@ app.get('/api/metrics/playbooks', (_req, res) => {
   }
 });
 
+// ── Session Invalidation Handler ────────────────────────────
+
+function handleSessionInvalidation(token) {
+  if (!activeSession || activeSession.token !== token) return;
+
+  console.log(`[auth] Session invalidated, killing ${activeSession.terminalIds.length} terminals`);
+
+  // Kill all terminals for this session
+  for (const id of activeSession.terminalIds) {
+    const terminal = terminals.get(id);
+    if (terminal && terminal.status !== 'exited') {
+      terminal.pty.kill('SIGTERM');
+      for (const ws of terminal.clients) ws.close();
+      terminals.delete(id);
+    }
+  }
+
+  activeSession = null;
+}
+
 // ── Start ───────────────────────────────────────────────────
 
 server.listen(PORT, () => {
   console.log(`Ninja Terminals v2 running on http://localhost:${PORT}`);
+  console.log(`Auth required: POST /api/session with Bearer token to start`);
 
   // Start SSE heartbeat
   sse.startHeartbeat(15000);
 
-  // Spawn default terminals
-  for (let i = 0; i < DEFAULT_TERMINALS; i++) {
-    spawnTerminal(`T${i + 1}`, [], DEFAULT_CWD);
-  }
+  // Start session heartbeat — re-validates tokens every 5 minutes
+  startSessionHeartbeat(sessionCache, handleSessionInvalidation, 5 * 60 * 1000);
 
-  console.log(`Spawned ${DEFAULT_TERMINALS} terminals with Claude Code`);
+  // NOTE: Terminals are NOT spawned on startup.
+  // Users must POST /api/session with a valid token to create a session and spawn terminals.
 });

@@ -33,13 +33,23 @@ OPTIONS
   --port        <number>   Port to listen on          (default: 3300)
   --terminals   <number>   Number of terminals to spawn (default: 4)
   --cwd         <path>     Working directory for terminals (default: current dir)
+  --token       <jwt>      Auth token for Pro users / CI (skips browser login)
+  --offline                Offline mode for Pro users (skips backend validation)
   --version, -v            Print version and exit
   --help,    -h            Show this help message
+
+AUTHENTICATION
+  Pro users can authenticate via:
+    1. Browser login (default) - sign in at the web UI
+    2. --token flag - pass JWT directly (useful for CI/scripts)
+    3. --offline flag - skip validation (requires downloaded Pro package)
 
 EXAMPLES
   npx ninja-terminals
   npx ninja-terminals --port 3301 --terminals 2
   npx ninja-terminals --cwd /path/to/my-project
+  npx ninja-terminals --token eyJhbGciOiJIUzI1NiIs...
+  npx ninja-terminals --offline
 `);
   process.exit(0);
 }
@@ -52,6 +62,8 @@ if (hasFlag('--version') || hasFlag('-v')) {
 const port      = parseInt(getArg('--port',      '3300'),  10);
 const terminals = parseInt(getArg('--terminals', '4'),     10);
 const cwd       = getArg('--cwd', process.cwd());
+const token     = getArg('--token', null);
+const offline   = hasFlag('--offline');
 
 if (isNaN(port) || port < 1 || port > 65535) {
   console.error(`Error: --port must be a number between 1 and 65535`);
@@ -65,6 +77,8 @@ if (isNaN(terminals) || terminals < 1 || terminals > 16) {
 
 // ── Startup banner ───────────────────────────────────────────
 
+const authMode = offline ? 'offline' : (token ? 'token' : 'browser');
+
 console.log(`
 ╔═══════════════════════════════════════╗
 ║          NINJA TERMINALS v${pkg.version}          ║
@@ -73,6 +87,7 @@ console.log(`
 ║  Port       : ${String(port).padEnd(24)} ║
 ║  Terminals  : ${String(terminals).padEnd(24)} ║
 ║  CWD        : ${cwd.length > 24 ? '...' + cwd.slice(-21) : cwd.padEnd(24)} ║
+║  Auth       : ${authMode.padEnd(24)} ║
 ╚═══════════════════════════════════════╝
 `);
 
@@ -83,6 +98,14 @@ console.log(`
 process.env.PORT               = String(port);
 process.env.DEFAULT_TERMINALS  = String(terminals);
 process.env.DEFAULT_CWD        = cwd;
+
+// Auth env vars
+if (token) {
+  process.env.NINJA_AUTH_TOKEN = token;
+}
+if (offline) {
+  process.env.NINJA_OFFLINE = '1';
+}
 
 // ── Auto-open browser ────────────────────────────────────────
 

@@ -909,19 +909,18 @@
     <div class="section-inner" style="max-width: 900px;">
       <div class="hero-eyebrow">Claude Code Orchestration</div>
 
-      <h1>1 orchestrator.<br><span class="accent-t1">4 agents.</span><br>Ship faster.</h1>
+      <h1>You describe it.<br><span class="accent-t1">4 agents</span> build it.</h1>
 
       <p class="hero-sub">
-        A 5th Claude Code instance watches, coordinates, and dispatches work
-        to 4 parallel agents. It learns what works, evolves its playbooks,
-        and gets better every session.
+        You describe what you want. The orchestrator breaks it into tasks
+        and coordinates 4 Claude Code agents working in parallel.
+        No babysitting. No context-switching. Just ship.
       </p>
 
       <div class="hero-actions">
-        <div class="npx-block">
-          <code class="npx-code"><span class="cmd-dim">$</span> npx ninja-terminals</code>
-          <button class="copy-btn" id="hero-copy-btn" onclick="copyNpx('hero-copy-btn')">COPY</button>
-        </div>
+        <a href="#pricing" class="btn-ghost" style="background: var(--t3); border-color: var(--t3); color: var(--bg); font-weight: 700;">
+          Get Started
+        </a>
         <a href="https://github.com/davidmini/ninja-terminal" class="btn-ghost" target="_blank" rel="noopener">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
           View on GitHub
@@ -1124,39 +1123,51 @@
   <!-- ── Pricing ───────────────────────────────── -->
   <section id="pricing">
     <div class="section-inner">
-      <div class="section-label">What you get</div>
-      <h2>Open core.<br>Pay once, own it.</h2>
+      <div class="section-label">Pick your tier</div>
+      <h2>Start free.<br>Scale when ready.</h2>
       <p class="section-desc">
-        The core is free and open source. Pro is a one-time purchase — no subscriptions,
-        no seats, no vendor lock-in.
+        Try the basics free. Upgrade for the orchestrator that coordinates your agents
+        and evolves with every session.
       </p>
-      <div class="pricing-grid">
+      <div class="pricing-grid" style="grid-template-columns: repeat(3, 1fr); max-width: 1000px;">
         <div class="pricing-card">
-          <div class="tier-badge">Free / Open Source</div>
+          <div class="tier-badge">Free</div>
           <div class="pricing-price">$0</div>
-          <div class="pricing-note">Forever. MIT license.</div>
+          <div class="pricing-note">Get started</div>
           <ul class="pricing-features">
-            <li>4 parallel Claude Code terminals</li>
-            <li>Real-time status detection (7 states)</li>
-            <li>Activity feed and task queue</li>
-            <li>Progress tracking per pane</li>
-            <li>Works with any MCP config</li>
-            <li>Runs entirely on your machine</li>
+            <li>2 parallel Claude Code terminals</li>
+            <li>Real-time status detection</li>
+            <li>Activity feed</li>
+            <li>Progress tracking</li>
+            <li>No orchestrator</li>
           </ul>
         </div>
-        <div class="pricing-card featured">
-          <div class="tier-badge">Pro — One-Time</div>
-          <div class="pricing-price">$39</div>
-          <div class="pricing-note">Pay once. Keep forever.</div>
+        <div class="pricing-card" style="border-left: 1px solid var(--border);">
+          <div class="tier-badge" style="border-left: 3px solid var(--t2);">Standard</div>
+          <div class="pricing-price">$12<span style="font-size: 18px; color: var(--text-dim);">/mo</span></div>
+          <div class="pricing-note">Most popular</div>
           <ul class="pricing-features">
-            <li>Everything in Free</li>
-            <li>Self-improving orchestrator system</li>
-            <li>Evolving playbooks with session metrics</li>
-            <li>CLAUDE.md templates for 10+ project types</li>
-            <li>170+ MCP tool configs, pre-wired</li>
-            <li>Setup guide and onboarding walkthrough</li>
+            <li>4 parallel Claude Code terminals</li>
+            <li>Basic orchestrator prompt</li>
+            <li>Status protocol integration</li>
+            <li>Task queue coordination</li>
+            <li>Works with any MCP config</li>
           </ul>
-          <a href="https://melodavid4.gumroad.com/l/dtnnk" class="buy-pro-btn" target="_blank" rel="noopener">Buy Pro — $39</a>
+          <button class="buy-pro-btn" style="background: var(--t2);" disabled>Coming Soon</button>
+        </div>
+        <div class="pricing-card featured">
+          <div class="tier-badge">Pro</div>
+          <div class="pricing-price">$29<span style="font-size: 18px; color: var(--text-dim);">/mo</span></div>
+          <div class="pricing-note">Full system</div>
+          <ul class="pricing-features">
+            <li>8 parallel Claude Code terminals</li>
+            <li>Full orchestrator with evolution</li>
+            <li>Self-improving playbooks</li>
+            <li>Session metrics and learning</li>
+            <li>Builder Pro integration</li>
+            <li>Offline mode</li>
+          </ul>
+          <button class="buy-pro-btn" disabled>Coming Soon</button>
         </div>
       </div>
     </div>
@@ -1165,13 +1176,12 @@
   <!-- ── Final CTA ─────────────────────────────── -->
   <section id="cta">
     <div class="section-inner" style="max-width: 700px; text-align: center; margin: 0 auto;">
-      <div class="cta-label">Get started now</div>
-      <h2>Start building with<br>4x the agents.</h2>
+      <div class="cta-label">Ready to ship faster?</div>
+      <h2>Let 4 agents<br>do the work.</h2>
       <div class="hero-actions" style="margin-top: 40px;">
-        <div class="npx-block">
-          <code class="npx-code"><span class="cmd-dim">$</span> npx ninja-terminals</code>
-          <button class="copy-btn" id="cta-copy-btn" onclick="copyNpx('cta-copy-btn')">COPY</button>
-        </div>
+        <a href="#pricing" class="btn-ghost" style="background: var(--t3); border-color: var(--t3); color: var(--bg); font-weight: 700;">
+          Choose Your Plan
+        </a>
         <a href="https://github.com/davidmini/ninja-terminal" class="btn-ghost" target="_blank" rel="noopener">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
           View on GitHub

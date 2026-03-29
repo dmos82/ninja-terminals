@@ -84,6 +84,7 @@ body {
   padding: 14px 16px 10px;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .logo {
@@ -675,4 +676,202 @@ main {
   color: var(--text-dim);
   text-align: center;
   font-style: italic;
+}
+
+/* ── Auth Overlay ───────────────────────────── */
+
+#auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 12, 12, 0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#auth-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.auth-card {
+  width: 380px;
+  max-width: 90vw;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.auth-stripes {
+  display: flex;
+  height: 6px;
+}
+.auth-stripes .stripe { flex: 1; }
+.auth-stripes .s1 { background: var(--feed-t1); }
+.auth-stripes .s2 { background: var(--feed-t2); }
+.auth-stripes .s3 { background: var(--feed-t3); }
+.auth-stripes .s4 { background: var(--feed-t4); }
+
+.auth-card-inner {
+  padding: 32px 28px;
+}
+
+.logo-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 8px;
+  color: var(--cream);
+  text-align: center;
+  margin: 0 0 4px;
+  line-height: 1;
+}
+
+.auth-subtitle {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 28px;
+}
+
+#login-form,
+#license-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#auth-overlay input[type="text"],
+#auth-overlay input[type="password"] {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px 14px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--text-bright);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#auth-overlay input::placeholder {
+  color: var(--text-dim);
+}
+
+#auth-overlay input:focus {
+  outline: none;
+  border-color: var(--feed-t1);
+  box-shadow: 0 0 0 2px rgba(27, 138, 158, 0.15);
+}
+
+.auth-btn {
+  background: var(--cream);
+  border: none;
+  border-radius: 3px;
+  padding: 12px 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: var(--bg);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.auth-btn:hover {
+  background: var(--text-bright);
+}
+
+.auth-btn:active {
+  transform: scale(0.98);
+}
+
+.auth-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.auth-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.auth-error {
+  color: var(--state-error);
+  font-size: 12px;
+  text-align: center;
+  margin: 4px 0 0;
+  min-height: 18px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.auth-divider span {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.auth-footer {
+  margin: 24px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.auth-footer a {
+  color: var(--feed-t1);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.auth-footer a:hover {
+  color: var(--text-bright);
+  text-decoration: underline;
+}
+
+/* ── Logout Button ──────────────────────────── */
+
+.logout-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  background: none;
+  border: 1px solid var(--cream-dark);
+  color: var(--cream-dark);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover {
+  background: var(--cream-dark);
+  color: var(--cream);
 }

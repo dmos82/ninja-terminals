@@ -4,3 +4,6 @@ orchestrator/metrics/*.json
 .claude/settings.local.json
 orchestrator/metrics/raw/*.ndjson
 orchestrator/metrics/summaries.ndjson
+
+# Local Netlify folder
+.netlify

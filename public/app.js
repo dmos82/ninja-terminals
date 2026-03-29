@@ -2,6 +2,190 @@
 
 const WS_BASE = `ws://${location.host}`;
 const API_BASE = '';
+const AUTH_API = 'https://emtchat-backend.onrender.com/api';
+const TOKEN_KEY = 'ninja_token';
+
+// ── Auth Module ──────────────────────────────────────────────
+
+const auth = {
+  token: null,
+  user: null,
+  tier: null,
+  terminalsMax: 2,
+
+  init() {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) return false;
+
+    try {
+      // Decode JWT payload (base64url)
+      const parts = stored.split('.');
+      if (parts.length !== 3) {
+        localStorage.removeItem(TOKEN_KEY);
+        return false;
+      }
+
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+      // Check expiration
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem(TOKEN_KEY);
+        return false;
+      }
+
+      this.token = stored;
+      this.user = payload.sub || payload.email || payload.username || null;
+      return true;
+    } catch {
+      localStorage.removeItem(TOKEN_KEY);
+      return false;
+    }
+  },
+
+  async login(usernameOrEmail, password) {
+    const res = await fetch(`${AUTH_API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: usernameOrEmail, password }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Login failed');
+    }
+
+    const data = await res.json();
+    this.token = data.token || data.accessToken;
+    localStorage.setItem(TOKEN_KEY, this.token);
+
+    await this.validateTier();
+    return data;
+  },
+
+  async activateLicense(key) {
+    const res = await fetch(`${AUTH_API}/ninja/activate-license`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ licenseKey: key }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Invalid license key');
+    }
+
+    const data = await res.json();
+    this.token = data.token || data.accessToken;
+    localStorage.setItem(TOKEN_KEY, this.token);
+
+    await this.validateTier();
+    return data;
+  },
+
+  async validateTier() {
+    const res = await fetch(`${API_BASE}/api/session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ token: this.token }),
+    });
+
+    if (!res.ok) {
+      // Session validation failed, but we still have local token
+      // Proceed with defaults
+      console.warn('Session validation failed, using defaults');
+      return;
+    }
+
+    const data = await res.json();
+    this.tier = data.tier || 'free';
+    this.terminalsMax = data.terminalsMax || 2;
+    if (data.user) this.user = data.user;
+  },
+
+  async logout() {
+    try {
+      await fetch(`${API_BASE}/api/session`, {
+        method: 'DELETE',
+        headers: this.getAuthHeader(),
+      });
+    } catch {
+      // Ignore errors on logout
+    }
+
+    this.token = null;
+    this.user = null;
+    this.tier = null;
+    localStorage.removeItem(TOKEN_KEY);
+
+    showAuthOverlay();
+  },
+
+  getAuthHeader() {
+    return this.token ? { 'Authorization': `Bearer ${this.token}` } : {};
+  },
+};
+
+// ── Auth UI ──────────────────────────────────────────────────
+
+function showAuthOverlay() {
+  const overlay = document.getElementById('auth-overlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('login-email').focus();
+}
+
+function hideAuthOverlay() {
+  const overlay = document.getElementById('auth-overlay');
+  overlay.classList.add('hidden');
+}
+
+function setupAuthForms() {
+  const loginForm = document.getElementById('login-form');
+  const licenseForm = document.getElementById('license-form');
+  const loginError = document.getElementById('login-error');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.textContent = '';
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    try {
+      await auth.login(email, password);
+      hideAuthOverlay();
+      startApp();
+    } catch (err) {
+      loginError.textContent = err.message;
+    }
+  });
+
+  licenseForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.textContent = '';
+
+    const key = document.getElementById('license-key').value.trim();
+    if (!key) {
+      loginError.textContent = 'Please enter a license key';
+      return;
+    }
+
+    try {
+      await auth.activateLicense(key);
+      hideAuthOverlay();
+      startApp();
+    } catch (err) {
+      loginError.textContent = err.message;
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    auth.logout();
+  });
+}
 
 // ── State ────────────────────────────────────────────────────
 
@@ -208,8 +392,9 @@ function createTerminalUI(termData) {
     try { fitAddon.fit(); } catch {}
   });
 
-  // WebSocket
-  const ws = new WebSocket(`${WS_BASE}/ws/${id}`);
+  // WebSocket — include auth token in query string
+  const wsUrl = auth.token ? `${WS_BASE}/ws/${id}?token=${encodeURIComponent(auth.token)}` : `${WS_BASE}/ws/${id}`;
+  const ws = new WebSocket(wsUrl);
   ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => {
@@ -302,7 +487,7 @@ function startLabelEdit(id, labelEl) {
     // Persist to server
     fetch(`${API_BASE}/api/terminals/${id}/label`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth.getAuthHeader() },
       body: JSON.stringify({ label: newLabel }),
     }).catch(() => {});
   };
@@ -410,7 +595,7 @@ async function closeTerminal(id) {
   if (!t) return;
 
   try {
-    await fetch(`${API_BASE}/api/terminals/${id}`, { method: 'DELETE' });
+    await fetch(`${API_BASE}/api/terminals/${id}`, { method: 'DELETE', headers: auth.getAuthHeader() });
   } catch {}
 
   t.ws.close();
@@ -432,7 +617,7 @@ async function closeTerminal(id) {
 
 async function killTerminal(id) {
   try {
-    await fetch(`${API_BASE}/api/terminals/${id}/kill`, { method: 'POST' });
+    await fetch(`${API_BASE}/api/terminals/${id}/kill`, { method: 'POST', headers: auth.getAuthHeader() });
     addFeedEntry(`Kill sent to terminal`, id);
   } catch (err) {
     console.error('Kill failed:', err);
@@ -444,7 +629,7 @@ async function pauseTerminal(id) {
   try {
     await fetch(`${API_BASE}/api/terminals/${id}/input`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth.getAuthHeader() },
       body: JSON.stringify({ text: '\x1b' }),
     });
     addFeedEntry(`Escape sent to terminal`, id);
@@ -455,7 +640,7 @@ async function pauseTerminal(id) {
 
 async function restartTerminal(id) {
   try {
-    await fetch(`${API_BASE}/api/terminals/${id}/restart`, { method: 'POST' });
+    await fetch(`${API_BASE}/api/terminals/${id}/restart`, { method: 'POST', headers: auth.getAuthHeader() });
     addFeedEntry(`Restart requested`, id);
   } catch (err) {
     console.error('Restart failed:', err);
@@ -474,7 +659,7 @@ async function addNewTerminal() {
   try {
     const res = await fetch(`${API_BASE}/api/terminals`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth.getAuthHeader() },
     });
     const data = await res.json();
     createTerminalUI(data);
@@ -699,7 +884,7 @@ function connectSSE() {
 
 async function fetchTasks() {
   try {
-    const res = await fetch(`${API_BASE}/api/tasks`);
+    const res = await fetch(`${API_BASE}/api/tasks`, { headers: auth.getAuthHeader() });
     if (!res.ok) {
       taskQueue.innerHTML = '<div class="no-tasks">No tasks</div>';
       return;
@@ -735,7 +920,7 @@ function renderTasks(tasks) {
 
 async function pollStatus() {
   try {
-    const res = await fetch(`${API_BASE}/api/terminals`);
+    const res = await fetch(`${API_BASE}/api/terminals`, { headers: auth.getAuthHeader() });
     const list = await res.json();
 
     for (const item of list) {
@@ -815,9 +1000,9 @@ window.addEventListener('resize', () => {
   resizeTimeout = setTimeout(() => fitAll(), 100);
 });
 
-// ── Initialize ───────────────────────────────────────────────
+// ── Start App (after auth) ───────────────────────────────────
 
-async function init() {
+async function startApp() {
   // Request desktop notification permission
   requestNotificationPermission();
 
@@ -827,7 +1012,9 @@ async function init() {
 
   // Load existing terminals
   try {
-    const res = await fetch(`${API_BASE}/api/terminals`);
+    const res = await fetch(`${API_BASE}/api/terminals`, {
+      headers: auth.getAuthHeader(),
+    });
     const list = await res.json();
     for (const item of list) {
       createTerminalUI(item);
@@ -855,6 +1042,24 @@ async function init() {
   updateStatusBar();
 
   addFeedEntry('Ninja Terminals v2 started');
+}
+
+// ── Initialize ───────────────────────────────────────────────
+
+async function init() {
+  // Setup auth form handlers
+  setupAuthForms();
+
+  // Check for existing valid token
+  if (auth.init()) {
+    // Valid token found, validate tier and start app
+    await auth.validateTier();
+    hideAuthOverlay();
+    startApp();
+  } else {
+    // No valid token, show login overlay
+    showAuthOverlay();
+  }
 }
 
 init();
