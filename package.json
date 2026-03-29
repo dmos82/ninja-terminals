@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/davidmorin/ninja-terminals.git"
+    "url": "git+https://github.com/dmos82/ninja-terminals.git"
   },
   "homepage": "https://ninjaterminals.com",
   "engines": {
