@@ -7,3 +7,4 @@ orchestrator/metrics/summaries.ndjson
 
 # Local Netlify folder
 .netlify
+.mcp.json
