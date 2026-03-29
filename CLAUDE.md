@@ -54,25 +54,10 @@ These status lines are CRITICAL — the orchestrator parses them to know your st
 - The orchestrator relays between terminals
 
 ## MCP Tools
-You have access to 170+ MCP tools. Use them proactively:
-- **postforme**: Video rendering, social publishing, Meta ads, content management, brand profiles, asset management, insights/analytics
-- **studychat**: RAG knowledge base, DMs, C2C messaging, document upload/query
-- **chrome-devtools**: Browser automation — navigate, click, type, screenshot, forms, network monitoring
-- **gmail**: Search emails, read messages, download attachments
-- **netlify-billing / render-billing**: Deployment status, billing, service health
-- **builder-pro**: Code review, security scan, auto-fix, architecture validation
-- **gkchatty**: Knowledge base queries, uploads — DO NOT USE unless explicitly instructed
-
-### PostForMe Publishing — Use the Right Tool
-| Content Type | Correct Tool | Wrong Tool (will fail) |
-|---|---|---|
-| Video → IG Reel | `publish_meta(contentId, platform: "instagram")` | — |
-| Video → FB | `publish_meta(contentId, platform: "facebook")` | — |
-| Video → Story | `publish_story(contentId, imageUrl/videoUrl)` | publish_meta |
-| Carousel (multi-image) | `publish_carousel(imageUrls: [...], caption)` | publish_meta |
+Ninja Terminals works with any MCP tools you have configured. The orchestrator and workers will automatically detect and use your installed MCP servers.
 
 ### Tool Selection Priority
-1. Check the tool list first — verify it accepts the parameters you need
+1. Check your available tool list first — verify it accepts the parameters you need
 2. Use the most direct tool available (MCP > browser automation > manual)
 3. If an MCP tool exists for the task, prefer it over browser-driving
 4. Use browser automation for websites without an MCP/API

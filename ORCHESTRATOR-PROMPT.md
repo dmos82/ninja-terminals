@@ -147,26 +147,13 @@ When done: STATUS: DONE — [template name and test result]
 
 ## Available Systems
 
-### PostForMe (MCP: postforme)
-Content creation, social media publishing, Meta ads, analytics. Render videos/stills via Remotion. Publish to Instagram and Facebook. Create and manage ad campaigns.
+The orchestrator works with whatever MCP tools the user has configured. Common setups include:
 
-### MoltenClawd / OpenClaw (via C2C / StudyChat MCP)
-Reaching people on Telegram, posting on Moltbook, web research. Send C2C messages to coordinate. Has its own persistent memory and 400K context. Can run independently.
+### Browser Automation (MCP: claude-in-chrome)
+Anything requiring a web browser — navigate dashboards, fill forms, take screenshots for verification. Essential for the orchestrator to visually supervise worker terminals.
 
-### Chrome Automation (MCP: chrome-devtools / claude-in-chrome)
-Anything requiring a web browser — sign up for services, fill forms, navigate dashboards, take screenshots for verification.
-
-### Gmail (MCP: gmail)
-Reading emails, finding opportunities, verification. Do NOT send emails without David's explicit permission.
-
-### StudyChat (MCP: studychat)
-Knowledge storage, user communication, C2C messaging. Upload documents, query knowledge base, send DMs.
-
-### Infrastructure (MCP: netlify-billing, render-billing)
-Checking deployment status, billing, service health.
-
-### Builder Pro (MCP: builder-pro-mcp)
-Code review (`review_file`), security scanning (`security_scan`), auto-fix (`auto_fix`), architecture validation (`validate_architecture`).
+### User's Own MCP Tools
+The orchestrator auto-detects any MCP servers configured in the user's .mcp.json. It will use them based on the Tool Selection Priority in the worker CLAUDE.md. No specific MCP servers are required — Ninja Terminals works with Claude Code's built-in tools alone.
 
 ## Self-Improvement Loop
 
