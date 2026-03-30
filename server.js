@@ -489,6 +489,43 @@ app.post('/api/session/end', requireAuth, async (req, res) => {
   }
 });
 
+// Get latest learning summary
+app.get('/api/learnings/latest', requireAuth, async (req, res) => {
+  try {
+    const { generateLearningSummary, loadPreviousRatings, TOOL_RATINGS_PATH } = require('./lib/post-session');
+    const { getPreDispatchContext } = require('./lib/pre-dispatch');
+    const { validateHypotheses } = require('./lib/hypothesis-validator');
+    const fs = require('fs');
+
+    // Load current and previous ratings
+    let currentRatings = {};
+    if (fs.existsSync(TOOL_RATINGS_PATH)) {
+      currentRatings = JSON.parse(fs.readFileSync(TOOL_RATINGS_PATH, 'utf8'));
+    }
+    const previousRatings = loadPreviousRatings();
+
+    // Get hypothesis validation status
+    const hypothesisResults = validateHypotheses();
+    const hypothesisValidation = {
+      promoted: hypothesisResults.filter(r => r.decision === 'promote').map(r => r.hypothesis),
+      rejected: hypothesisResults.filter(r => r.decision === 'reject').map(r => r.hypothesis),
+      continue: hypothesisResults.filter(r => r.decision === 'continue').map(r => r.hypothesis),
+    };
+
+    // Get current guidance
+    const ctx = await getPreDispatchContext();
+    const guidance = ctx.toolGuidance || [];
+
+    // Generate summary
+    const summary = generateLearningSummary(currentRatings, previousRatings, hypothesisValidation, guidance);
+
+    res.json(summary);
+  } catch (err) {
+    console.error('[learnings/latest] Failed:', err.message);
+    res.status(500).json({ error: 'Failed to generate learning summary', detail: err.message });
+  }
+});
+
 // List terminals
 app.get('/api/terminals', requireAuth, (req, res) => {
   const list = [];

@@ -11,6 +11,21 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Learnings Modal -->
+  <div id="learnings-overlay" class="hidden">
+    <div class="learnings-modal">
+      <div class="learnings-header">
+        <h2>🧠 Session Learnings</h2>
+        <button id="learnings-close" class="learnings-close">&times;</button>
+      </div>
+      <pre id="learnings-content" class="learnings-content">Loading...</pre>
+      <div class="learnings-footer">
+        <button id="learnings-refresh" class="auth-btn">Refresh</button>
+        <button id="learnings-end-session" class="auth-btn auth-btn-secondary">End Session & Analyze</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Auth Overlay -->
   <div id="auth-overlay">
     <div class="auth-card">
@@ -45,6 +60,7 @@
         <div class="logo-card">
           <span class="logo">NINJA TERMINALS</span>
           <span class="logo-sub">Multi-Agent Orchestrator</span>
+          <button id="learnings-btn" class="learnings-btn" title="View Session Learnings">🧠</button>
           <button id="logout-btn" class="logout-btn" title="Sign out">Logout</button>
         </div>
         <div class="logo-stripes">

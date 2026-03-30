@@ -1009,6 +1009,7 @@ async function startApp() {
   // Setup sidebar
   setupSidebar();
   setupAddTask();
+  setupLearnings();
 
   // Load existing terminals
   try {
@@ -1042,6 +1043,67 @@ async function startApp() {
   updateStatusBar();
 
   addFeedEntry('Ninja Terminals v2 started');
+}
+
+// ── Learnings Module ───────────────────────────────────────────
+
+function setupLearnings() {
+  const btn = document.getElementById('learnings-btn');
+  const overlay = document.getElementById('learnings-overlay');
+  const closeBtn = document.getElementById('learnings-close');
+  const refreshBtn = document.getElementById('learnings-refresh');
+  const endSessionBtn = document.getElementById('learnings-end-session');
+  const content = document.getElementById('learnings-content');
+
+  if (!btn || !overlay) return;
+
+  async function fetchLearnings() {
+    content.textContent = 'Loading...';
+    try {
+      const res = await fetch(`${API_BASE}/api/learnings/latest`, {
+        headers: auth.getAuthHeader(),
+      });
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      content.textContent = data.plainText || 'No learnings available yet.';
+    } catch (err) {
+      content.textContent = `Error: ${err.message}\n\nRun some sessions first to generate learnings.`;
+    }
+  }
+
+  async function endSession() {
+    content.textContent = 'Analyzing session...';
+    try {
+      const res = await fetch(`${API_BASE}/api/session/end`, {
+        method: 'POST',
+        headers: auth.getAuthHeader(),
+      });
+      if (!res.ok) throw new Error('Failed to end session');
+      const data = await res.json();
+      content.textContent = data.learningSummary?.plainText || 'Session ended. No learnings generated.';
+      addFeedEntry('Session analyzed - check learnings');
+    } catch (err) {
+      content.textContent = `Error: ${err.message}`;
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    overlay.classList.remove('hidden');
+    fetchLearnings();
+  });
+
+  closeBtn.addEventListener('click', () => {
+    overlay.classList.add('hidden');
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.add('hidden');
+    }
+  });
+
+  refreshBtn.addEventListener('click', fetchLearnings);
+  endSessionBtn.addEventListener('click', endSession);
 }
 
 // ── Initialize ───────────────────────────────────────────────
