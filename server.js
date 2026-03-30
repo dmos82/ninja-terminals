@@ -18,6 +18,8 @@ const { createAuthMiddleware, validateWebSocketToken, startSessionHeartbeat } = 
 const { parsePlaybooks, getPlaybookUsage, promotePlaybooks } = require('./lib/playbook-tracker');
 const { isImmutable, safeWrite, safeAppend } = require('./lib/safe-file-writer');
 const { logEvolution } = require('./lib/evolution-writer');
+const { getPreDispatchContext, formatContextForInjection } = require('./lib/pre-dispatch');
+const { runPostSession } = require('./lib/post-session');
 
 // ── Config ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3300;
@@ -26,6 +28,7 @@ const CLAUDE_CMD = process.env.CLAUDE_CMD || 'claude --dangerously-skip-permissi
 const SHELL = process.env.SHELL || '/bin/zsh';
 const PROJECT_DIR = __dirname;
 const DEFAULT_CWD = process.env.DEFAULT_CWD || null;  // Set to target project path to avoid cross-project prompts
+const INJECT_GUIDANCE = process.env.INJECT_GUIDANCE !== 'false';  // Default true, set INJECT_GUIDANCE=false to disable
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -459,6 +462,33 @@ app.get('/api/session', requireAuth, (req, res) => {
   });
 });
 
+// End session — triggers post-session automation (analysis, ratings, hypothesis validation)
+app.post('/api/session/end', requireAuth, async (req, res) => {
+  try {
+    console.log('[session/end] Triggering post-session automation...');
+
+    // Run the full post-session pipeline
+    const result = await runPostSession();
+
+    // Broadcast completion event
+    sse.broadcast('session_end', {
+      filesProcessed: result.filesProcessed,
+      toolsRated: Object.keys(result.toolRatings).length,
+      hypothesesPromoted: result.hypothesisValidation.promoted,
+      hypothesesRejected: result.hypothesisValidation.rejected,
+      duration_ms: result.duration_ms,
+      ts: result.ts,
+    });
+
+    console.log(`[session/end] Completed: ${result.filesProcessed} files, ${result.hypothesisValidation.promoted.length} promoted, ${result.hypothesisValidation.rejected.length} rejected`);
+
+    res.json(result);
+  } catch (err) {
+    console.error('[session/end] Failed:', err.message);
+    res.status(500).json({ error: 'Post-session automation failed', detail: err.message });
+  }
+});
+
 // List terminals
 app.get('/api/terminals', requireAuth, (req, res) => {
   const list = [];
@@ -557,7 +587,7 @@ app.post('/api/terminals/:id/restart', requireAuth, (req, res) => {
 });
 
 // Send input
-app.post('/api/terminals/:id/input', requireAuth, (req, res) => {
+app.post('/api/terminals/:id/input', requireAuth, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const terminal = terminals.get(id);
   if (!terminal) return res.status(404).json({ error: 'Not found' });
@@ -565,8 +595,29 @@ app.post('/api/terminals/:id/input', requireAuth, (req, res) => {
   const text = req.body?.text;
   if (!text) return res.status(400).json({ error: 'text required' });
 
-  terminal.pty.write(text);
-  res.json({ ok: true });
+  let finalText = text;
+  let guidanceInjected = false;
+
+  // Inject guidance from prior sessions if enabled
+  if (INJECT_GUIDANCE) {
+    try {
+      const ctx = await getPreDispatchContext();
+      const hasGuidance = ctx.toolGuidance.length > 0 || ctx.playbookInsights.length > 0;
+
+      if (hasGuidance) {
+        const guidanceBlock = formatContextForInjection(ctx);
+        finalText = `${guidanceBlock}\n\n${text}`;
+        guidanceInjected = true;
+        console.log(`[guidance] Injected ${ctx.toolGuidance.length} tool hints + ${ctx.playbookInsights.length} playbook insights into T${terminal.id}`);
+      }
+    } catch (err) {
+      console.error(`[guidance] Failed to load pre-dispatch context: ${err.message}`);
+      // Continue without guidance — don't block the input
+    }
+  }
+
+  terminal.pty.write(finalText);
+  res.json({ ok: true, guidanceInjected });
 });
 
 // Set label

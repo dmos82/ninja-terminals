@@ -31,7 +31,7 @@ T2: Trace the code path (read every line that executes)
 T3: Implement the fix (after T1+T2 report)
 T4: Verify the fix (reproduce original steps, confirm fixed)
 ```
-**Status:** Hypothesis from debugging methodology. Test and measure.
+**Status:** rejected (2026-03-30) — Target: Edit (success_rate) | Baseline: 0.313 (16 samples) | Test: 0.143 (7 samples) | Change: -54.3
 
 ## Dispatch Best Practices
 
@@ -69,7 +69,7 @@ When looking for new tools or techniques:
 - **Server crashes during heavy npm install** — when T1 runs npm install while T2-T4 are also active, the server can go down. Dispatch npm install first, wait for completion, THEN dispatch other terminals.
 - **Staggered dispatch matters** — telling T2-T4 to "wait 30 seconds" is unreliable. Better to dispatch T1, wait for DONE, then dispatch T2-T4.
 
-**Status:** hypothesis — validate after 3+ sessions
+**Status:** rejected (2026-03-30) — Target: Edit (success_rate) | Baseline: 0.313 (16 samples) | Test: 0.143 (7 samples) | Change: -54.3
 
 ## Known Anti-Patterns (Learned)
 

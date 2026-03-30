@@ -38,3 +38,10 @@
 **Why:** First real metrics from self-improvement loop. Edit failures (0.42) vs Write (0.60) vs Bash (0.78) show clear tool preference hierarchy.
 **Evidence:** 66 tool calls across 10 sessions. Edit: 6 invocations with failures. Bash: 29 invocations, high success.
 **Reversible:** yes
+
+### 2026-03-30 — Rejected hypothesis: For Bug Fixes
+**File:** orchestrator/playbooks.md
+**Change:** Rejected hypothesis: For Bug Fixes
+**Why:** Metric worsened by >10% over 3+ sessions
+**Evidence:** Target: Edit (success_rate) | Baseline: 0.313 (16 samples) | Test: 0.143 (7 samples) | Change: -54.3% | Test sessions: 5 | Worsened by 54.3% (>10% threshold)
+**Reversible:** yes
