@@ -881,6 +881,40 @@ function handleSessionInvalidation(token) {
   activeSession = null;
 }
 
+// ── Auth Proxy (avoids CORS) ────────────────────────────────
+
+const BACKEND_URL = process.env.NINJA_BACKEND_URL || 'https://emtchat-backend.onrender.com';
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const resp = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await resp.json();
+    res.status(resp.status).json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'Backend unreachable', detail: err.message });
+  }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const resp = await fetch(`${BACKEND_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const data = await resp.json();
+    res.status(resp.status).json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'Backend unreachable', detail: err.message });
+  }
+});
+
 // ── Start ───────────────────────────────────────────────────
 
 server.listen(PORT, () => {

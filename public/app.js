@@ -2,7 +2,7 @@
 
 const WS_BASE = `ws://${location.host}`;
 const API_BASE = '';
-const AUTH_API = 'https://emtchat-backend.onrender.com/api';
+const AUTH_API = '/api';
 const TOKEN_KEY = 'ninja_token';
 
 // ── Auth Module ──────────────────────────────────────────────
@@ -1050,14 +1050,16 @@ async function init() {
   // Setup auth form handlers
   setupAuthForms();
 
-  // Check for existing valid token
+  // Check for existing valid session
   if (auth.init()) {
-    // Valid token found, validate tier and start app
-    await auth.validateTier();
+    try {
+      await auth.validateTier();
+    } catch (err) {
+      console.warn('Tier validation failed:', err);
+    }
     hideAuthOverlay();
     startApp();
   } else {
-    // No valid token, show login overlay
     showAuthOverlay();
   }
 }

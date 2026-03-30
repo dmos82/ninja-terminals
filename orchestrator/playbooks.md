@@ -61,6 +61,16 @@ When looking for new tools or techniques:
 6. Compare metrics before/after adoption
 7. Only promote to "active" in tool-registry.md if measurably better
 
+## Measured Insights (Session 2026-03-29)
+
+- **Edit has a C rating (0.42)** — highest failure rate of all tools. Use Write for new files, reserve Edit only for targeted changes to existing files. This reduces failures.
+- **Bash is reliable (A, 0.78)** — npm install, build commands, file operations all work well.
+- **Glob is the most reliable tool (A, 0.79)** — prefer Glob over Bash(find) or Bash(ls) for directory scanning.
+- **Server crashes during heavy npm install** — when T1 runs npm install while T2-T4 are also active, the server can go down. Dispatch npm install first, wait for completion, THEN dispatch other terminals.
+- **Staggered dispatch matters** — telling T2-T4 to "wait 30 seconds" is unreliable. Better to dispatch T1, wait for DONE, then dispatch T2-T4.
+
+**Status:** hypothesis — validate after 3+ sessions
+
 ## Known Anti-Patterns (Learned)
 
 - **Don't mock databases in integration tests** — prior incident where mocked tests passed but prod migration failed
