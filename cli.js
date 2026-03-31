@@ -32,7 +32,7 @@ USAGE
 OPTIONS
   --setup                  Configure MCP server + orchestrator prompt (run once)
   --port        <number>   Port to listen on          (default: 3300)
-  --terminals   <number>   Number of terminals to spawn (default: 4)
+  --terminals   <number>   Number of terminals to spawn (default: 2, paid: 4)
   --cwd         <path>     Working directory for terminals (default: current dir)
   --token       <jwt>      Auth token for Pro users / CI (skips browser login)
   --offline                Offline mode for Pro users (skips backend validation)
@@ -89,7 +89,7 @@ if (hasFlag('--setup')) {
     command: 'node',
     args: [path.join(npmRoot, 'mcp-server.js')],
     env: {
-      NINJA_TERMINAL_COUNT: '4',
+      NINJA_TERMINAL_COUNT: '2',  // Free tier default. Set to '4' for paid.
       NINJA_LOG_LEVEL: 'info'
     }
   };
@@ -180,7 +180,7 @@ MCP tools available after restart:
 }
 
 const port      = parseInt(getArg('--port',      '3300'),  10);
-const terminals = parseInt(getArg('--terminals', '4'),     10);
+const terminals = parseInt(getArg('--terminals', '2'),     10);  // Free tier default
 const cwd       = getArg('--cwd', process.cwd());
 const token     = getArg('--token', null);
 const offline   = hasFlag('--offline');

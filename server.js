@@ -23,7 +23,7 @@ const { runPostSession } = require('./lib/post-session');
 
 // ── Config ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3300;
-const DEFAULT_TERMINALS = parseInt(process.env.DEFAULT_TERMINALS || '4', 10);
+const DEFAULT_TERMINALS = parseInt(process.env.DEFAULT_TERMINALS || '2', 10);  // Free tier default
 const CLAUDE_CMD = process.env.CLAUDE_CMD || 'claude --dangerously-skip-permissions';
 const SHELL = process.env.SHELL || '/bin/zsh';
 const PROJECT_DIR = __dirname;
