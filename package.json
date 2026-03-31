@@ -1,13 +1,15 @@
 {
   "name": "ninja-terminals",
-  "version": "2.1.5",
-  "description": "Multi-terminal Claude Code orchestrator with DAG task management, permission hooks, and resilience",
+  "version": "2.2.0",
+  "description": "MCP server for multi-terminal Claude Code orchestration with DAG task management, parallel execution, and self-improvement",
   "main": "server.js",
   "bin": {
-    "ninja-terminals": "cli.js"
+    "ninja-terminals": "cli.js",
+    "ninja-terminals-mcp": "mcp-server.js"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "mcp": "node mcp-server.js"
   },
   "files": [
     "lib/",
@@ -22,6 +24,7 @@
     "prompts/",
     "cli.js",
     "server.js",
+    "mcp-server.js",
     "CLAUDE.md",
     "ORCHESTRATOR-PROMPT.md"
   ],
@@ -32,7 +35,10 @@
     "terminal",
     "orchestrator",
     "agents",
-    "multi-agent"
+    "multi-agent",
+    "mcp",
+    "model-context-protocol",
+    "mcp-server"
   ],
   "author": "",
   "license": "MIT",
@@ -47,6 +53,7 @@
   "type": "commonjs",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "cheerio": "^1.2.0",
     "express": "^5.2.1",
     "multer": "^2.1.1",
