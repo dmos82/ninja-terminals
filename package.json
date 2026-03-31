@@ -1,6 +1,6 @@
 {
   "name": "ninja-terminals",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "MCP server for multi-terminal Claude Code orchestration with DAG task management, parallel execution, and self-improvement",
   "main": "server.js",
   "bin": {
