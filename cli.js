@@ -121,21 +121,51 @@ if (hasFlag('--setup')) {
     }
   }
 
-  // 4. Check for Claude in Chrome
+  // 4. Add required MCP dependencies (Playwright + Fetch)
+  // These are needed for browser automation and API calls
+
+  if (!mcpConfig.mcpServers['playwright']) {
+    mcpConfig.mcpServers['playwright'] = {
+      command: 'npx',
+      args: ['@anthropic-ai/playwright-mcp@latest']
+    };
+    console.log(`✅ Added Playwright MCP (browser automation)`);
+  } else {
+    console.log(`✅ Playwright MCP already configured`);
+  }
+
+  if (!mcpConfig.mcpServers['fetch']) {
+    mcpConfig.mcpServers['fetch'] = {
+      command: 'npx',
+      args: ['@anthropic-ai/fetch-mcp@latest']
+    };
+    console.log(`✅ Added Fetch MCP (API calls)`);
+  } else {
+    console.log(`✅ Fetch MCP already configured`);
+  }
+
+  // Save updated config with all MCPs
+  fs.writeFileSync(mcpPath, JSON.stringify(mcpConfig, null, 2) + '\n');
+
+  // 5. Check for Claude in Chrome (optional but recommended)
   const chromeExt = mcpConfig.mcpServers['claude-in-chrome'];
   if (chromeExt) {
-    console.log(`✅ Claude in Chrome detected`);
+    console.log(`✅ Claude in Chrome detected (recommended)`);
   } else {
-    console.log(`⚠️  Claude in Chrome not found in MCP config`);
-    console.log(`   For browser automation, install: https://github.com/anthropics/claude-in-chrome`);
+    console.log(`ℹ️  Claude in Chrome not found (optional - Playwright will be used)`);
   }
 
   console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✨ Setup complete!
 
+MCPs configured:
+  • ninja-terminals - orchestrates parallel Claude Code instances
+  • playwright - browser automation (screenshots, clicks, reading)
+  • fetch - API calls to /api/terminals
+
 Next steps:
-1. Restart Claude Code to load MCP server
+1. Restart Claude Code to load MCP servers
 2. Run: npx ninja-terminals
 3. Or use MCP tools directly in Claude Code
 
