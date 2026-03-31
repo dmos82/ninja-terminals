@@ -694,24 +694,51 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // ── Start Servers ───────────────────────────────────────────
 
-async function main() {
-  // Start HTTP server for browser UI
-  httpServer.listen(HTTP_PORT, () => {
-    console.error(`Ninja Terminals HTTP server running on http://localhost:${HTTP_PORT}`);
-
-    // Auto-spawn terminals based on tier (NINJA_TERMINAL_COUNT env var)
-    // Free = 2, Paid = 4
-    const terminalCount = parseInt(process.env.NINJA_TERMINAL_COUNT || '2', 10);
-    const labels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'];
-
-    console.error(`Auto-spawning ${terminalCount} terminals...`);
-    for (let i = 0; i < terminalCount; i++) {
-      const label = labels[i] || `T${i + 1}`;
-      spawnTerminal(label, [], process.cwd(), 'pro');
-      console.error(`  Spawned ${label}`);
-    }
-    console.error(`All ${terminalCount} terminals ready`);
+// Check if port is in use
+function isPortInUse(port) {
+  return new Promise((resolve) => {
+    const net = require('net');
+    const server = net.createServer();
+    server.once('error', () => resolve(true));
+    server.once('listening', () => {
+      server.close();
+      resolve(false);
+    });
+    server.listen(port, '127.0.0.1');
   });
+}
+
+// Proxy mode flag - when true, MCP tools should call existing server via HTTP
+let proxyMode = false;
+
+async function main() {
+  // Check if server.js is already running on port 3300
+  const portInUse = await isPortInUse(HTTP_PORT);
+
+  if (portInUse) {
+    // Proxy mode: server.js is already running, just run MCP on stdio
+    proxyMode = true;
+    console.error(`Ninja Terminals server already running on port ${HTTP_PORT}`);
+    console.error('MCP server starting in proxy mode (will use existing server)');
+  } else {
+    // Standalone mode: start our own HTTP server
+    httpServer.listen(HTTP_PORT, () => {
+      console.error(`Ninja Terminals HTTP server running on http://localhost:${HTTP_PORT}`);
+
+      // Auto-spawn terminals based on tier (NINJA_TERMINAL_COUNT env var)
+      // Free = 2, Paid = 4
+      const terminalCount = parseInt(process.env.NINJA_TERMINAL_COUNT || '2', 10);
+      const labels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'];
+
+      console.error(`Auto-spawning ${terminalCount} terminals...`);
+      for (let i = 0; i < terminalCount; i++) {
+        const label = labels[i] || `T${i + 1}`;
+        spawnTerminal(label, [], process.cwd(), 'pro');
+        console.error(`  Spawned ${label}`);
+      }
+      console.error(`All ${terminalCount} terminals ready`);
+    });
+  }
 
   // Start MCP server on stdio
   const transport = new StdioServerTransport();
