@@ -1123,12 +1123,11 @@
       <div class="steps">
         <div class="step-card">
           <span class="step-number">01</span>
-          <div class="step-title">Start the server</div>
+          <div class="step-title">One-time setup</div>
           <p class="step-desc">
-            One command spins up a local Node server and opens Ninja Terminals in your browser.
-            Your existing Claude API key and MCP configs are auto-detected.
+            Configures MCP server for Claude Code integration and adds the orchestrator prompt. Run once, then restart Claude Code.
           </p>
-          <code class="step-cmd">npx ninja-terminals</code>
+          <code class="step-cmd">npx ninja-terminals --setup</code>
         </div>
         <div class="step-card">
           <span class="step-number">02</span>
@@ -1306,7 +1305,7 @@
         }
 
         // Success!
-        successEl.innerHTML = 'Account created! Now run:<br><code style="background:#222;padding:4px 8px;border-radius:4px;">npx ninja-terminals</code><br>and sign in with your credentials.';
+        successEl.innerHTML = 'Account created! Now run:<br><code style="background:#222;padding:4px 8px;border-radius:4px;">npx ninja-terminals --setup</code><br>then restart Claude Code and run <code style="background:#222;padding:4px 8px;border-radius:4px;">npx ninja-terminals</code>';
         successEl.style.display = 'block';
         document.getElementById('signup-form').querySelector('button[type="submit"]').textContent = 'Done!';
       } catch (err) {
@@ -1316,7 +1315,7 @@
     }); // Close DOMContentLoaded
 
     function copyNpx(btnId) {
-      const text = 'npx ninja-terminals';
+      const text = 'npx ninja-terminals --setup';
       navigator.clipboard.writeText(text).then(function () {
         var btn = document.getElementById(btnId);
         btn.textContent = 'COPIED';
