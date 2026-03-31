@@ -30,6 +30,7 @@ USAGE
   npx ninja-terminals [options]
 
 OPTIONS
+  --setup                  Configure MCP server + orchestrator prompt (run once)
   --port        <number>   Port to listen on          (default: 3300)
   --terminals   <number>   Number of terminals to spawn (default: 4)
   --cwd         <path>     Working directory for terminals (default: current dir)
@@ -56,6 +57,95 @@ EXAMPLES
 
 if (hasFlag('--version') || hasFlag('-v')) {
   console.log(pkg.version);
+  process.exit(0);
+}
+
+// ── Setup command ───────────────────────────────────────────
+if (hasFlag('--setup')) {
+  const fs = require('fs');
+  const path = require('path');
+  const os = require('os');
+
+  console.log('\n🥷 NINJA TERMINALS SETUP\n');
+
+  // 1. Find or create .mcp.json
+  const projectMcp = path.join(process.cwd(), '.mcp.json');
+  const globalMcp = path.join(os.homedir(), '.mcp.json');
+  const mcpPath = fs.existsSync(projectMcp) ? projectMcp : globalMcp;
+
+  let mcpConfig = { mcpServers: {} };
+  if (fs.existsSync(mcpPath)) {
+    try {
+      mcpConfig = JSON.parse(fs.readFileSync(mcpPath, 'utf-8'));
+      if (!mcpConfig.mcpServers) mcpConfig.mcpServers = {};
+    } catch (e) {
+      console.log(`⚠️  Could not parse ${mcpPath}, creating new config`);
+    }
+  }
+
+  // 2. Add ninja-terminals MCP server
+  const npmRoot = path.dirname(require.resolve('ninja-terminals/package.json'));
+  mcpConfig.mcpServers['ninja-terminals'] = {
+    command: 'node',
+    args: [path.join(npmRoot, 'mcp-server.js')],
+    env: {
+      NINJA_TERMINAL_COUNT: '4',
+      NINJA_LOG_LEVEL: 'info'
+    }
+  };
+
+  fs.writeFileSync(mcpPath, JSON.stringify(mcpConfig, null, 2) + '\n');
+  console.log(`✅ Added ninja-terminals to ${mcpPath}`);
+
+  // 3. Copy orchestrator prompt to CLAUDE.md
+  const claudeMd = path.join(process.cwd(), 'CLAUDE.md');
+  const orchestratorPrompt = path.join(npmRoot, 'prompts', 'orchestrator-lite.md');
+
+  if (fs.existsSync(orchestratorPrompt)) {
+    const prompt = fs.readFileSync(orchestratorPrompt, 'utf-8');
+    const marker = '<!-- NINJA TERMINALS ORCHESTRATOR -->';
+
+    let claudeContent = '';
+    if (fs.existsSync(claudeMd)) {
+      claudeContent = fs.readFileSync(claudeMd, 'utf-8');
+      if (claudeContent.includes(marker)) {
+        console.log(`✅ Orchestrator prompt already in CLAUDE.md`);
+      } else {
+        claudeContent += `\n\n${marker}\n${prompt}`;
+        fs.writeFileSync(claudeMd, claudeContent);
+        console.log(`✅ Added orchestrator prompt to CLAUDE.md`);
+      }
+    } else {
+      fs.writeFileSync(claudeMd, `${marker}\n${prompt}`);
+      console.log(`✅ Created CLAUDE.md with orchestrator prompt`);
+    }
+  }
+
+  // 4. Check for Claude in Chrome
+  const chromeExt = mcpConfig.mcpServers['claude-in-chrome'];
+  if (chromeExt) {
+    console.log(`✅ Claude in Chrome detected`);
+  } else {
+    console.log(`⚠️  Claude in Chrome not found in MCP config`);
+    console.log(`   For browser automation, install: https://github.com/anthropics/claude-in-chrome`);
+  }
+
+  console.log(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ Setup complete!
+
+Next steps:
+1. Restart Claude Code to load MCP server
+2. Run: npx ninja-terminals
+3. Or use MCP tools directly in Claude Code
+
+MCP tools available after restart:
+  mcp__ninja-terminals__spawn_terminal
+  mcp__ninja-terminals__send_input
+  mcp__ninja-terminals__list_terminals
+  ... and 9 more
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
   process.exit(0);
 }
 

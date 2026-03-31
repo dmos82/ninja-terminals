@@ -1009,7 +1009,6 @@ app.post('/api/auth/register', async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Ninja Terminals v2 running on http://localhost:${PORT}`);
-  console.log(`Auth required: POST /api/session with Bearer token to start`);
 
   // Start SSE heartbeat
   sse.startHeartbeat(15000);
@@ -1017,6 +1016,14 @@ server.listen(PORT, () => {
   // Start session heartbeat — re-validates tokens every 5 minutes
   startSessionHeartbeat(sessionCache, handleSessionInvalidation, 5 * 60 * 1000);
 
-  // NOTE: Terminals are NOT spawned on startup.
-  // Users must POST /api/session with a valid token to create a session and spawn terminals.
+  // Auto-spawn terminals based on DEFAULT_TERMINALS env var
+  const terminalCount = DEFAULT_TERMINALS;
+  const labels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'];
+
+  console.log(`Auto-spawning ${terminalCount} terminals...`);
+  for (let i = 0; i < terminalCount; i++) {
+    const label = labels[i] || `T${i + 1}`;
+    spawnTerminal(label, [], DEFAULT_CWD || process.cwd(), 'pro');
+  }
+  console.log(`All ${terminalCount} terminals ready`);
 });
