@@ -202,10 +202,8 @@ const state = {
 const grid = document.getElementById('grid');
 const sidebar = document.getElementById('sidebar');
 const activityFeed = document.getElementById('activity-feed');
-const taskQueue = document.getElementById('task-queue');
 const statusCounts = document.getElementById('status-counts');
 const statusProgress = document.getElementById('status-progress');
-const addTaskBtn = document.getElementById('add-task-btn');
 const sidebarToggle = document.getElementById('sidebar-toggle');
 
 // ── State Color Map ──────────────────────────────────────────
@@ -892,41 +890,6 @@ function connectSSE() {
   return evtSource;
 }
 
-// ── Task Queue ───────────────────────────────────────────────
-
-async function fetchTasks() {
-  try {
-    const res = await fetch(`${API_BASE}/api/tasks`, { headers: auth.getAuthHeader() });
-    if (!res.ok) {
-      taskQueue.innerHTML = '<div class="no-tasks">No tasks</div>';
-      return;
-    }
-    const tasks = await res.json();
-    renderTasks(tasks);
-  } catch {
-    taskQueue.innerHTML = '<div class="no-tasks">No tasks</div>';
-  }
-}
-
-function renderTasks(tasks) {
-  if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
-    taskQueue.innerHTML = '<div class="no-tasks">No tasks</div>';
-    return;
-  }
-
-  taskQueue.innerHTML = '';
-  for (const task of tasks) {
-    const item = document.createElement('div');
-    item.className = 'task-item';
-    const dotClass = task.status || 'pending';
-    item.innerHTML = `
-      <span class="task-dot ${dotClass}"></span>
-      <span class="task-name" title="${escapeHtml(task.name || task.id || '')}">${escapeHtml(task.name || task.id || 'Unnamed')}</span>
-      <span class="task-status">${escapeHtml(task.status || 'pending')}</span>
-    `;
-    taskQueue.appendChild(item);
-  }
-}
 
 // ── Status Polling (fallback + elapsed updates) ──────────────
 
@@ -996,14 +959,6 @@ function setupSidebar() {
   document.body.appendChild(mobileToggle);
 }
 
-// ── Add Task ─────────────────────────────────────────────────
-
-function setupAddTask() {
-  addTaskBtn.addEventListener('click', () => {
-    addNewTerminal();
-  });
-}
-
 // ── Resize Handler ───────────────────────────────────────────
 
 let resizeTimeout;
@@ -1020,7 +975,6 @@ async function startApp() {
 
   // Setup sidebar
   setupSidebar();
-  setupAddTask();
   setupLearnings();
   setupAddTerminal();
 
@@ -1049,14 +1003,8 @@ async function startApp() {
   // Connect SSE for real-time updates
   connectSSE();
 
-  // Fetch initial task queue
-  fetchTasks();
-
   // Poll status every 3 seconds (fallback for SSE + elapsed updates)
   setInterval(pollStatus, 3000);
-
-  // Poll task queue every 5 seconds
-  setInterval(fetchTasks, 5000);
 
   // Initial status bar
   updateStatusBar();
