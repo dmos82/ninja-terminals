@@ -219,14 +219,41 @@ function spawnTerminal(label, scope = [], cwd = null, tier = 'pro') {
 
 // ── Status Detection Loop (2s) ──────────────────────────────
 
+// Track last output time for stuck detection
+const lastOutputTime = new Map();
+const STUCK_THRESHOLD_MS = 120000; // 2 minutes with no output = stuck
+
 setInterval(() => {
-  for (const [, terminal] of terminals) {
+  for (const [id, terminal] of terminals) {
     if (terminal.status === 'exited') continue;
     const prev = terminal.status;
     const recentLines = terminal.lineBuffer.last(50);
     const newStatus = detectStatus(recentLines);
 
-    if (newStatus !== prev) {
+    // Track output activity for stuck detection
+    const currentOutput = terminal.lineBuffer.last(5).join('');
+    const lastOutput = lastOutputTime.get(id);
+    if (!lastOutput || lastOutput.output !== currentOutput) {
+      lastOutputTime.set(id, { output: currentOutput, time: Date.now() });
+    }
+
+    // Check for stuck terminal (no output for 2+ minutes while "working")
+    const lastActivity = lastOutputTime.get(id);
+    if (lastActivity && terminal.status === 'working') {
+      const stuckTime = Date.now() - lastActivity.time;
+      if (stuckTime > STUCK_THRESHOLD_MS) {
+        terminal.status = 'stuck';
+        sse.broadcast('terminal_stuck', {
+          terminal: terminal.label,
+          id: terminal.id,
+          stuckFor: Math.round(stuckTime / 1000),
+          suggestion: 'Refresh page or POST /api/terminals/:id/restart',
+        });
+        console.log(`Terminal ${id} (${terminal.label}) appears stuck - no output for ${Math.round(stuckTime / 1000)}s`);
+      }
+    }
+
+    if (newStatus !== prev && newStatus !== 'stuck') {
       terminal.status = newStatus;
       sse.broadcast('status_change', {
         terminal: terminal.label,

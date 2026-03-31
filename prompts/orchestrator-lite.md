@@ -110,7 +110,21 @@ When done: STATUS: DONE — [template name and test result]
 | `done` | Read output. Verify the claim. Assign next task. |
 | `blocked` | Read what it needs. Provide it, or reassign. |
 | `error` | Read the error. Send fix instructions or restart. |
+| `stuck` | Terminal is unresponsive. **Refresh the page** or `POST /api/terminals/:id/restart`. |
 | `compacting` | Wait, then re-orient fully with context summary. |
+
+### Stuck Terminal Recovery
+Terminals can get stuck after tool errors (permission denied, failed commands, etc.). Signs of a stuck terminal:
+- No output for 2+ minutes while status shows "working"
+- Input commands have no effect
+- Status shows `stuck`
+
+**Recovery steps:**
+1. **First try**: Refresh the Ninja Terminals page (Cmd+R / Ctrl+R)
+2. **If that fails**: `POST /api/terminals/:id/restart` to restart just that terminal
+3. **Last resort**: Kill and respawn: `DELETE /api/terminals/:id` then `POST /api/terminals/spawn`
+
+After recovery, re-dispatch the task with full context — the terminal lost its memory.
 
 ### Context Preservation
 - Terminals WILL compact during long tasks and lose memory

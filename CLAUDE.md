@@ -38,6 +38,17 @@ These status lines are CRITICAL — the orchestrator parses them to know your st
 - If a build breaks, fix it yourself — don't wait for the orchestrator
 - If you hit a permissions wall, report BLOCKED with specifics
 
+### Stuck Terminal Recovery
+If you notice your terminal is stuck (no response to input, commands hang), or if you see another terminal is stuck:
+1. **Report it**: `STATUS: ERROR:STUCK — terminal unresponsive after [what happened]`
+2. **The orchestrator will**: Refresh the page or restart the terminal
+3. **After restart**: You will lose context. Wait for re-orientation from the orchestrator.
+
+Common causes of stuck terminals:
+- Permission errors (chmod, file access)
+- Tool failures that leave PTY in bad state
+- Context window overflow
+
 ### Completeness
 - Don't report DONE for partial work. If you were asked to "build and test", both must be done.
 - Include evidence with DONE: test output, screenshot path, API response, URL, file path
