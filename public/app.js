@@ -62,6 +62,26 @@ const auth = {
     return data;
   },
 
+  async register(username, email, password) {
+    const res = await fetch(`${AUTH_API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Registration failed');
+    }
+
+    const data = await res.json();
+    this.token = data.token || data.accessToken;
+    localStorage.setItem(TOKEN_KEY, this.token);
+
+    await this.validateTier();
+    return data;
+  },
+
   async activateLicense(key) {
     const res = await fetch(`${AUTH_API}/ninja/activate-license`, {
       method: 'POST',
@@ -143,10 +163,45 @@ function hideAuthOverlay() {
 
 function setupAuthForms() {
   const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
   const licenseForm = document.getElementById('license-form');
   const loginError = document.getElementById('login-error');
+  const registerError = document.getElementById('register-error');
   const logoutBtn = document.getElementById('logout-btn');
+  const showRegisterLink = document.getElementById('show-register');
+  const authToggleText = document.getElementById('auth-toggle-text');
 
+  // Toggle between login and register
+  let showingRegister = false;
+
+  function toggleAuthMode() {
+    showingRegister = !showingRegister;
+    if (showingRegister) {
+      loginForm.classList.add('hidden');
+      registerForm.classList.remove('hidden');
+      authToggleText.innerHTML = 'Already have an account? <a href="#" id="show-register">Sign in</a>';
+      document.getElementById('register-username').focus();
+    } else {
+      registerForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      authToggleText.innerHTML = 'Don\'t have an account? <a href="#" id="show-register">Sign up</a>';
+      document.getElementById('login-email').focus();
+    }
+    // Re-attach click handler to new link
+    document.getElementById('show-register').addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleAuthMode();
+    });
+    loginError.textContent = '';
+    registerError.textContent = '';
+  }
+
+  showRegisterLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleAuthMode();
+  });
+
+  // Login form
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.textContent = '';
@@ -163,6 +218,30 @@ function setupAuthForms() {
     }
   });
 
+  // Register form
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    registerError.textContent = '';
+
+    const username = document.getElementById('register-username').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+
+    if (password.length < 8) {
+      registerError.textContent = 'Password must be at least 8 characters';
+      return;
+    }
+
+    try {
+      await auth.register(username, email, password);
+      hideAuthOverlay();
+      startApp();
+    } catch (err) {
+      registerError.textContent = err.message;
+    }
+  });
+
+  // License form
   licenseForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.textContent = '';

@@ -1,5 +1,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+.hidden { display: none !important; }
+
 :root {
   /* ── Retro Command Cards palette ── */
   --bg: #0C0C0C;
