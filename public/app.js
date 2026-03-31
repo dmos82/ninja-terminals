@@ -347,7 +347,7 @@ function createTerminalUI(termData) {
   closeBtn.addEventListener('mousedown', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    removeTerminal(id);
+    closeTerminal(id);
   });
 
   header.appendChild(labelEl);
@@ -1108,7 +1108,7 @@ async function clearAllTerminals() {
 
   const ids = Array.from(state.terminals.keys());
   for (const id of ids) {
-    await removeTerminal(id);
+    await closeTerminal(id);
   }
   addFeedEntry('All terminals cleared');
 }

@@ -346,14 +346,30 @@ app.get('/health', (_req, res) => {
 
 // ── Session Endpoints ───────────────────────────────────────
 
-// Create session — validates token and spawns terminals
+// Create session — validates token and returns existing or spawns terminals
 app.post('/api/session', requireAuth, (req, res) => {
   try {
     const { tier, terminalsMax, features, token } = req.ninjaUser;
 
-    // Clear any existing session
+    // If session already exists with same token, return existing terminals
+    if (activeSession && activeSession.token === token) {
+      const existingTerminals = activeSession.terminalIds
+        .map(id => terminals.get(id))
+        .filter(Boolean)
+        .map(t => ({ id: t.id, label: t.label, status: t.status, cwd: t.cwd }));
+
+      console.log(`[session] Returning existing session: tier=${tier}, terminals=${existingTerminals.length}`);
+
+      return res.json({
+        tier,
+        terminalsMax,
+        features,
+        terminals: existingTerminals,
+      });
+    }
+
+    // Clear any existing session with different token
     if (activeSession) {
-      // Kill existing terminals
       for (const id of activeSession.terminalIds) {
         const terminal = terminals.get(id);
         if (terminal) {
@@ -364,7 +380,7 @@ app.post('/api/session', requireAuth, (req, res) => {
       }
     }
 
-    // Create new session
+    // Create new session (but don't auto-spawn terminals - let user add them)
     activeSession = {
       token,
       tier,
@@ -374,28 +390,14 @@ app.post('/api/session', requireAuth, (req, res) => {
       createdAt: Date.now(),
     };
 
-    // Spawn terminals up to the tier limit
-    const cwd = req.body?.cwd || DEFAULT_CWD;
-    const spawnedTerminals = [];
+    console.log(`[session] Created new session: tier=${tier}, terminalsMax=${terminalsMax}`);
 
-    for (let i = 0; i < terminalsMax; i++) {
-      const terminal = spawnTerminal(`T${i + 1}`, [], cwd, tier);
-      activeSession.terminalIds.push(terminal.id);
-      spawnedTerminals.push({
-        id: terminal.id,
-        label: terminal.label,
-        status: terminal.status,
-        cwd: terminal.cwd,
-      });
-    }
-
-    console.log(`[session] Created session: tier=${tier}, terminals=${terminalsMax}`);
-
+    // Return empty terminals - user can add via + button
     res.json({
       tier,
       terminalsMax,
       features,
-      terminals: spawnedTerminals,
+      terminals: [],
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create session', detail: err.message });
