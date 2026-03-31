@@ -1269,13 +1269,13 @@
       document.getElementById('signup-form').reset();
     }
 
-    // Close modal on overlay click
-    document.getElementById('signup-modal').addEventListener('click', function(e) {
-      if (e.target === this) hideSignupModal();
-    });
+    // Close modal on overlay click + form handler (wait for DOM)
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('signup-modal').addEventListener('click', function(e) {
+        if (e.target === this) hideSignupModal();
+      });
 
-    // Handle signup form
-    document.getElementById('signup-form').addEventListener('submit', async function(e) {
+      document.getElementById('signup-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const errEl = document.getElementById('signup-error');
       const successEl = document.getElementById('signup-success');
@@ -1313,6 +1313,7 @@
         errEl.textContent = 'Network error. Please try again.';
       }
     });
+    }); // Close DOMContentLoaded
 
     function copyNpx(btnId) {
       const text = 'npx ninja-terminals';
