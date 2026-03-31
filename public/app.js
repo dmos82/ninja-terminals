@@ -339,11 +339,23 @@ function createTerminalUI(termData) {
   progressFill.style.width = `${progress || 0}%`;
   progressTrack.appendChild(progressFill);
 
+  // Close button (X)
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'close-btn';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.title = 'Close terminal';
+  closeBtn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeTerminal(id);
+  });
+
   header.appendChild(labelEl);
   header.appendChild(stateEl);
   header.appendChild(elapsedEl);
   header.appendChild(spacer);
   header.appendChild(actionsEl);
+  header.appendChild(closeBtn);
   header.appendChild(progressTrack);
 
   // Double-click header to maximize/restore
@@ -1010,6 +1022,13 @@ async function startApp() {
   setupSidebar();
   setupAddTask();
   setupLearnings();
+  setupAddTerminal();
+
+  // Clear all button
+  const clearBtn = document.getElementById('clear-all-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearAllTerminals);
+  }
 
   // Load existing terminals
   try {
@@ -1046,6 +1065,53 @@ async function startApp() {
 }
 
 // ── Learnings Module ───────────────────────────────────────────
+
+function setupAddTerminal() {
+  const btn = document.getElementById('add-terminal-btn');
+  if (!btn) return;
+
+  // Store last used directory
+  let lastCwd = localStorage.getItem('ninja-last-cwd') || '/Users/davidmini/Desktop/Projects';
+
+  btn.addEventListener('click', async () => {
+    try {
+      const cwd = prompt('Working directory:', lastCwd);
+      if (!cwd) return;
+
+      lastCwd = cwd;
+      localStorage.setItem('ninja-last-cwd', cwd);
+
+      const res = await fetch(`${API_BASE}/api/terminals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...auth.getAuthHeader() },
+        body: JSON.stringify({ cwd }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Failed to create terminal: ${err.error || 'Unknown error'}`);
+        return;
+      }
+
+      const terminal = await res.json();
+      createTerminalUI(terminal);
+      addFeedEntry(`Terminal added: T${terminal.id}`);
+    } catch (err) {
+      console.error('Failed to add terminal:', err);
+      alert('Failed to add terminal');
+    }
+  });
+}
+
+async function clearAllTerminals() {
+  if (!confirm('Close all terminals and start fresh?')) return;
+
+  const ids = Array.from(state.terminals.keys());
+  for (const id of ids) {
+    await removeTerminal(id);
+  }
+  addFeedEntry('All terminals cleared');
+}
 
 function setupLearnings() {
   const btn = document.getElementById('learnings-btn');
