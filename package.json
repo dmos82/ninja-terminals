@@ -1,6 +1,6 @@
 {
   "name": "ninja-terminals",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Multi-terminal Claude Code orchestrator with DAG task management, permission hooks, and resilience",
   "main": "server.js",
   "bin": {
