@@ -698,6 +698,19 @@ async function main() {
   // Start HTTP server for browser UI
   httpServer.listen(HTTP_PORT, () => {
     console.error(`Ninja Terminals HTTP server running on http://localhost:${HTTP_PORT}`);
+
+    // Auto-spawn terminals based on tier (NINJA_TERMINAL_COUNT env var)
+    // Free = 2, Paid = 4
+    const terminalCount = parseInt(process.env.NINJA_TERMINAL_COUNT || '2', 10);
+    const labels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'];
+
+    console.error(`Auto-spawning ${terminalCount} terminals...`);
+    for (let i = 0; i < terminalCount; i++) {
+      const label = labels[i] || `T${i + 1}`;
+      spawnTerminal(label, [], process.cwd(), 'pro');
+      console.error(`  Spawned ${label}`);
+    }
+    console.error(`All ${terminalCount} terminals ready`);
   });
 
   // Start MCP server on stdio
