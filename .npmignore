@@ -1,0 +1,18 @@
+# Exclude raw session data (user starts fresh)
+orchestrator/metrics/raw/
+orchestrator/metrics/*.ndjson
+orchestrator/metrics/*.json
+orchestrator/metrics/session-*.md
+
+# Keep .gitkeep files for folder structure
+!orchestrator/metrics/.gitkeep
+!orchestrator/metrics/raw/.gitkeep
+
+# Dev files
+docs/
+research/
+site/
+assets/
+src/
+*.md.bak
+.claude/

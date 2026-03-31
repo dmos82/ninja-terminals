@@ -1,6 +1,6 @@
 {
   "name": "ninja-terminals",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Multi-terminal Claude Code orchestrator with DAG task management, permission hooks, and resilience",
   "main": "server.js",
   "bin": {
@@ -12,9 +12,18 @@
   "files": [
     "lib/",
     "public/",
+    "orchestrator/playbooks.md",
+    "orchestrator/identity.md",
+    "orchestrator/security-protocol.md",
+    "orchestrator/tool-registry.md",
+    "orchestrator/evolution-log.md",
+    "orchestrator/metrics/.gitkeep",
+    "orchestrator/metrics/raw/.gitkeep",
+    "prompts/",
     "cli.js",
     "server.js",
-    "CLAUDE.md"
+    "CLAUDE.md",
+    "ORCHESTRATOR-PROMPT.md"
   ],
   "keywords": [
     "claude",
